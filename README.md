@@ -47,3 +47,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.16 | 2026-07-04 | One-line hero titles: stats-models reworded to "Statsig & Amplitude Experiment's Stats Models, Explained"; amp-mechanics trimmed to "Bucketing to P-Values" |
 | v1.17 | 2026-07-04 | stats-models hero subtext reframed: confidence-building, not an obligation list |
 | v1.18 | 2026-07-04 | amplitude-mechanics: characters renamed Ana→Baljin, Priya→Madushri |
+| v1.19 | 2026-07-04 | Standardised footer on all 8 pages (credit line + "Mobile friendly, best viewed on desktop" + last updated); removed duplicate index credit block |
