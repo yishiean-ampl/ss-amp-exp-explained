@@ -34,3 +34,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.4 | 2026-07-03 | Scroll-to-top button on all pages (appears after 350px scroll, smooth scroll, hover state) |
 | v1.5 | 2026-07-03 | stats-models.html hero standardised to match other pages (rounded gradient card, left-aligned) — CSS only, content and animations untouched |
 | v1.6 | 2026-07-03 | stats-models.html section nav restyled as concept-map-style pill tabs (content-width, card pills, blue lead pill) — CSS only |
+| v1.7 | 2026-07-03 | Hero unit-pill rows added to statsig-101.html and reading-results.html, matching courses 3 & 4 |
