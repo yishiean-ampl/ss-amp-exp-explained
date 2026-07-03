@@ -14,6 +14,7 @@ Interactive, animated learning site for the **Learn Statsig** track — built fo
 | `feature-gates.html` | Feature Gates Deep Dive — rule fall-through, rollout hashing, gate metrics, safe ops |
 | `analytics-session-replay.html` | Analytics + Session Replay — Metrics Explorer, funnel split, replay triggers |
 | `stats-models.html` | Statsig vs Amplitude — statistical models, animated (sequential testing, Bayesian/frequentist, CUPED) |
+| `amplitude-mechanics.html` | Amplitude Experiment mechanics — bucketing to p-values, animated (reference) |
 | `concept-map.html` | Statsig ↔ Amplitude concept map (reference) |
 
 Each course includes interactive simulators for statistical concepts, ELI6 explanations, Amplitude equivalents, and per-unit + cumulative quizzes. Quiz progress is stored in browser localStorage.
@@ -40,3 +41,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.10 | 2026-07-03 | QA pass: unbolded course 3 & 4 hero badges, added missing AI disclaimer to concept-map, standardised all page titles with "· Learn Statsig" suffix |
 | v1.11 | 2026-07-03 | ELI labels standardised to 🧒 ELI6 across all pages (stats-models ELI5→ELI6 x9, emoji position aligned on courses 1-3) |
 | v1.12 | 2026-07-04 | "Last updated" date stamp added to the footer of every page |
+| v1.13 | 2026-07-04 | Folded in Amplitude Experiment Mechanics page (amplitude-mechanics.html): house hero + pill nav + scrollspy + 🧒 ELI6 x13 + full footer kit; navbar rebuilt across all 8 pages |

@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amplitude Experiment Mechanics — Bucketing to P-Values, Animated · Learn Statsig</title>
+<style>
+  :root{
+    --blue:#0052F2; --darkblue:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+    --pink:#FF7D78; --red:#F23845; --green:#0EA05C; --ink:#0B0D17;
+    --bg:#F7F8FC; --card:#FFFFFF; --line:#E4E8F5; --muted:#5A6382; --amp:#0052F2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:Gellix,Poppins,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.55;}
+  .hero{background:linear-gradient(135deg,var(--darkblue) 0%,#0a2f7a 60%,var(--blue) 100%); color:#fff; padding:34px 30px; text-align:left; max-width:940px; margin:20px auto 0; border-radius:20px; position:relative; overflow:hidden;}
+  .hero::after{content:""; position:absolute; right:-60px; top:-60px; width:260px; height:260px; border-radius:50%; background:radial-gradient(circle,rgba(105,128,255,.45),transparent 70%);}
+  .hero h1{font-size:1.7rem; font-weight:800; letter-spacing:-.02em; margin-bottom:8px; position:relative; z-index:1;}
+  .hero p{color:#fff; opacity:.85; max-width:640px; margin:0; font-size:.95rem; position:relative; z-index:1;}
+  .hero .tags{margin-top:16px; display:flex; gap:8px; justify-content:flex-start; flex-wrap:wrap; position:relative; z-index:1;}
+  .hero .tag{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:5px 14px; font-size:.82rem;}
+  nav{position:sticky; top:0; z-index:50; background:var(--bg); display:flex; gap:8px; overflow-x:auto; padding:12px 20px; max-width:980px; margin:0 auto; align-items:center;}
+  nav a{white-space:nowrap; text-decoration:none; color:var(--muted); font-size:13px; font-weight:600; padding:9px 13px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); transition:.15s;}
+  nav a:hover{color:var(--blue); border-color:var(--lilac);}
+  nav a.active{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(0,82,242,.25);}
+  nav a.active:hover{color:#fff;}
+  .wrap{max-width:980px; margin:0 auto; padding:32px 20px 80px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px; margin-top:26px; box-shadow:0 2px 12px rgba(0,26,79,.05); scroll-margin-top:70px;}
+  .card h3{font-size:1.25rem; color:var(--darkblue); display:flex; align-items:center; gap:10px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 14px;}
+  .chip{font-size:.75rem; font-weight:700; border-radius:999px; padding:4px 12px; background:#E4EBFF; color:var(--amp); border:1px solid #C3D2FF;}
+  .eli5{background:#F4F7FF; border-left:4px solid var(--lilac); border-radius:0 12px 12px 0; padding:14px 16px; margin:12px 0; font-size:.95rem;}
+  .eli5 b{color:var(--darkblue);}
+  .usecase{background:#FFF4F3; border-left:4px solid var(--pink); border-radius:0 12px 12px 0; padding:14px 16px; margin:12px 0; font-size:.93rem;}
+  .usecase b{color:#B03A36;}
+  .anim{background:#0D1226; border-radius:14px; padding:14px; margin:14px 0;}
+  .anim canvas{width:100%; display:block; border-radius:8px;}
+  .anim .bar{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  button.play{background:var(--blue); border:none; color:#fff; font-weight:700; font-size:.82rem; padding:7px 16px; border-radius:999px; cursor:pointer; font-family:inherit;}
+  button.play:hover{background:#0344c4;}
+  button.ghost{background:transparent; border:1px solid #3A4470; color:#AAB6E8;}
+  button.ghost:hover{border-color:var(--lilac); color:#fff;}
+  .readout{color:#AAB6E8; font-size:.8rem; font-weight:600;}
+  .vs{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
+  .vs .col{border:1px solid var(--line); border-radius:12px; padding:13px 15px; font-size:.87rem;}
+  .vs .col h4{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px; color:var(--amp);}
+  .vs .col.g h4{color:#B03A36;}
+  .vs ul{padding-left:16px;} .vs li{margin:4px 0;}
+  .foot{margin-top:50px; font-size:.8rem; color:var(--muted);}
+  .foot a{color:var(--blue); text-decoration:none;}
+  .warn{background:#FFF8E6; border:1px solid #F2DFA0; border-radius:12px; padding:12px 16px; font-size:.85rem; margin-top:24px;}
+  .navsep{padding:7px 4px 7px 12px; font-size:.85rem; border-left:1px solid var(--line);}
+  .act{margin:48px 0 4px; padding:16px 22px; border-radius:14px; background:linear-gradient(120deg,#001A4F,#12329E); color:#fff;}
+  .act h2{font-size:1.1rem; margin:0;}
+  .act p{color:#B9C6F0; font-size:.87rem; margin:4px 0 0;}
+  .journey{display:flex; gap:10px; flex-wrap:wrap; margin:4px 0 10px;}
+  .journey a{flex:1; min-width:150px; text-decoration:none; background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 14px; color:var(--darkblue); font-weight:700; font-size:.92rem; box-shadow:0 2px 8px rgba(0,26,79,.05);}
+  .journey a span{display:block; font-weight:500; color:var(--muted); font-size:.8rem; margin-top:2px;}
+  .journey a:hover{border-color:var(--blue);}
+  @media(max-width:680px){.vs{grid-template-columns:1fr;} .hero h1{font-size:1.5rem;}}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">4️⃣ Analytics + SR</a><a href="stats-models.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">⚖️ Stats Models</a><a href="amplitude-mechanics.html" style="color:#fff;font-weight:800;text-decoration:none">🪣 Amp Mechanics</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+
+<div class="hero">
+  <h1>🪣 Amplitude Experiment Mechanics<br>Bucketing to P-Values, Animated</h1>
+  <p>The plumbing and the readout — how users get into variants, where flags get evaluated, and what the numbers on the results page actually mean. Every concept: 🧒 ELI6 + animation + an <b>AmpliBeauty 💄</b> example.</p>
+  <div class="tags"><span class="tag">Warehouse vs Cloud</span><span class="tag">Bucketing</span><span class="tag">Salt</span><span class="tag">Sticky</span><span class="tag">Deployments</span><span class="tag">Local vs Remote</span><span class="tag">Client vs Server 2×2</span><span class="tag">P-value</span><span class="tag">Confidence Interval</span></div>
+</div>
+
+<nav>
+  <span class="navsep">🎬</span><a href="#whn">Warehouse vs Cloud</a><a href="#webfeat">Web vs Feature</a><span class="navsep">🎲</span><a href="#bucket">Bucketing</a><a href="#salt">Salt</a><a href="#sticky">Sticky</a><span class="navsep">🚚</span><a href="#deploy">Deployments</a><a href="#eval">Local vs Remote</a><a href="#matrix">Client vs Server 2×2</a><span class="navsep">⚖️</span><a href="#sig">Significance</a><a href="#pval">P-value</a><a href="#ci">Confidence Interval</a><span class="navsep">🔮</span><a href="#duration">Duration Estimator</a>
+</nav>
+
+<div class="wrap">
+
+<div class="journey">
+<a href="#whn">🎬 Prologue<span>pick your machine</span></a>
+<a href="#bucket">🎲 Act 1<span>Yi Shiean gets sorted</span></a>
+<a href="#deploy">🚚 Act 2<span>the variant reaches her</span></a>
+<a href="#sig">⚖️ Act 3<span>reading the verdict</span></a>
+<a href="#duration">🔮 Epilogue<span>don't start doomed trials</span></a>
+</div>
+
+<div class="act"><h2>🎬 Prologue — Pick your machine</h2><p>Decisions made once, before any experiment runs: where the data lives, and which door your team walks through.</p></div>
+
+<!-- ============ WAREHOUSE-NATIVE VS CLOUD ============ -->
+<div class="card" id="whn">
+  <h3>🏦 Warehouse-Native vs Cloud Experimentation</h3>
+  <div class="chips"><span class="chip">Cloud: the vendor hosts a copy of your data</span><span class="chip">Warehouse-native: analysis runs INSIDE your warehouse</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> <b>Cloud</b> = you send your groceries to the vendor's kitchen. They store a copy, cook the analysis, and plate the results. <b>Warehouse-native</b> = the chef comes to YOUR kitchen. The recipes (SQL queries) travel to your warehouse, the cooking happens next to your fridge, and only the finished tasting notes go back. Your groceries never leave the building — and your fridge holds ingredients the vendor's kitchen has never seen: refunds, margins, offline orders.</div>
+  <div class="usecase" style="background:#F0FDF6;border-left-color:#0EA05C;"><b style="color:#0A7A46;">✓ Your cloud mental model — confirmed.</b> Target &amp; bucket users → send a key to the app so it knows what to render → stream events up → stats engine + duration estimators crunch → significance on the dashboard. That's cloud, and it's correct. <b>Warehouse-native changes WHERE the crunching happens, not WHAT it computes.</b> Bucketing and the key to the app work exactly the same (SDK — or even your own assignment system). But the metric data and the statistics move into your warehouse: the engine ships SQL in, runs the math beside your tables, and only a tiny results summary (typically &lt;1,000 rows) comes back out.</div>
+  <div class="anim">
+    <canvas id="cv-whn" height="270"></canvas>
+    <div class="bar"><button class="play" onclick="whnPlay('cloud')">▶ Cloud flow</button><button class="play ghost" onclick="whnPlay('whn')">▶ Warehouse-native flow</button><span class="readout" id="whn-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The CFO doesn't trust "revenue" from SDK purchase events — real net revenue lives in Snowflake finance tables, after refunds, wholesale exclusions and marketplace fees. And legal won't let raw order data leave the company. Warehouse-native squares it: the free-shipping-threshold experiment still assigns variants through the SDK, but the success metric is <i>net revenue after returns</i>, computed inside Snowflake from the same tables the board dashboard uses. The CFO signs off because the numbers reconcile by construction. The trade: results refresh on a schedule (nightly reloads), not in real time.</div>
+  <div class="vs">
+    <div class="col"><h4>Cloud experimentation</h4><ul><li>SDK assigns variants and streams events to the vendor's cloud, which stores its own copy of the data.</li><li>Stats engine runs on that copy; results are near-real-time.</li><li>Fast to start, no data team required — but metrics are limited to what the SDK tracked.</li></ul></div>
+    <div class="col g"><h4>Warehouse-native (e.g. Statsig WHN)</h4><ul><li>You grant a <b>service user</b> access you control; the engine writes SQL pipelines into Snowflake / BigQuery / Databricks and computes there.</li><li>Metrics defined on <b>your</b> tables via a semantic layer — finance revenue, returns, margin, even offline data.</li><li>Only small result sets (~&lt;1,000 rows) leave the warehouse; exposure data retained max 30 days vendor-side.</li><li>Trades: scheduled batch reloads instead of real-time, and warehouse compute costs are yours.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ WEB VS FEATURE EXPERIMENT ============ -->
+<div class="card" id="webfeat">
+  <h3>🎨 Web Experiment vs 🔧 Feature Experiment</h3>
+  <div class="chips"><span class="chip">Web: no-code visual editor, websites only</span><span class="chip">Feature: SDK flags, client + server, the full toolkit</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> Web Experiment is a <b>sticker kit</b> — a marketer opens a visual editor, points at the live website, swaps a headline or an image, tests a redirect. No engineer, no release, live by lunch. Feature Experiment is a <b>workshop</b> — engineers wire variants into the actual code behind feature flags, on any surface including the backend. Stickers change the surface; the workshop rebuilds the machine. Rule of thumb: <b>can you describe the change by pointing at a webpage? Sticker kit. Does it need a pull request? Workshop.</b></div>
+  <div class="anim">
+    <canvas id="cv-webfeat" height="250"></canvas>
+    <div class="bar"><button class="play" onclick="webfeatPlay('web')">▶ 🎨 Sticker kit (Web)</button><button class="play ghost" onclick="webfeatPlay('feat')">▶ 🔧 Workshop (Feature)</button><span class="readout" id="webfeat-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Marketing A/B tests the homepage headline — "Glow up your routine" vs "Skincare that works" — in the visual editor and it's live the same morning: <b>Web Experiment</b>. The product team tests the new Shade Finder quiz flow in the iOS app plus the checkout API behind it: <b>Feature Experiment</b>, because there's no sticker for a quiz engine. Same platform, same stats — different door in.</div>
+  <div class="vs">
+    <div class="col"><h4>🎨 Web Experiment</h4><ul><li>Visual editor + URL targeting + redirect tests; runs on websites via a browser snippet tuned for anti-flicker.</li><li>Built for marketers/growth — launch without a release cycle.</li><li>No sticky bucketing; a focused subset of the toolkit.</li></ul></div>
+    <div class="col g"><h4>🔧 Feature Experiment</h4><ul><li>SDK/flag-based, code-level variants on web, mobile <b>and backend</b> — this is where the whole client/server × local/remote 2×2 lives.</li><li>Deployments, sticky bucketing, testers, flag dependencies, assignment/exposure charts.</li><li>Needs engineering, buys you unlimited scope.</li></ul></div>
+  </div>
+</div>
+
+<div class="act"><h2>🎲 Act 1 — Yi Shiean gets sorted</h2><p>Follow one shopper: the instant she arrives, deterministic math decides her variant — and keeps deciding it the same way, forever.</p></div>
+
+<!-- ============ BUCKETING ============ -->
+<div class="card" id="bucket">
+  <h3>🪣 Bucketing</h3>
+  <div class="chips"><span class="chip">Deterministic hash: bucketing key + salt → variant</span><span class="chip">Default key: Amplitude ID</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> A sorting hat that never changes its mind. It reads your name, does some secret math, and puts you in a house. <b>Same name = same house, every single time</b> — on your phone, your laptop, or after you reinstall. There's no notebook of past decisions; the math itself IS the memory.</div>
+  <div class="anim">
+    <canvas id="cv-bucket" height="250"></canvas>
+    <div class="bar"><button class="play" onclick="bucketPlay()">▶ Sort 3 shoppers</button><button class="play ghost" onclick="bucketPlay()">▶ Same shoppers again</button><span class="readout" id="bucket-read">Hash(user + salt) → a number 0–99 → variant range</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Shopper Yi Shiean opens the Shade Finder test on her phone at lunch, her laptop at night, and after reinstalling the app next week. hash(Yi Shiean's ID + this flag's salt) always lands on 37 → always treatment. Across 2M shoppers, nobody stores 2M assignments — the formula recomputes the same answer instantly, anywhere.</div>
+  <div class="vs">
+    <div class="col"><h4>How it works in Amplitude</h4><ul><li>Bucketing key (default <b>Amplitude ID</b>; can be user property or group for B2B) + the flag's salt go into a hash → a bucket number → mapped to variant allocation ranges.</li><li>No assignment storage needed — deterministic and stateless.</li><li>Anonymous users bucketed by device can "variant jump" after identity merge — a classic gotcha.</li></ul></div>
+    <div class="col g"><h4>Gotchas to know</h4><ul><li>Anonymous users bucketed by device can <b>variant jump</b> once they log in and identities merge.</li><li>B2B tip: bucket by company ID so everyone in an org sees the same variant.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ SALT ============ -->
+<div class="card" id="salt">
+  <h3>🧂 Bucketing Salt</h3>
+  <div class="chips"><span class="chip">The "reshuffle" ingredient in the hash</span><span class="chip">Advanced Settings on the flag</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> The sorting hat's secret ingredient. Keep the same salt and the sorting never changes. <b>Change the salt and the entire school gets re-sorted</b> — everyone could land in a different house. Great when you WANT a fresh shuffle (a new run), catastrophic if someone does it mid-experiment.</div>
+  <div class="anim">
+    <canvas id="cv-salt" height="250"></canvas>
+    <div class="bar"><button class="play" onclick="saltPlay(true)">▶ Change the salt</button><button class="play ghost" onclick="saltPlay(false)">▶ Keep the salt</button><span class="readout" id="salt-read">40 shoppers, salt = "aK3x9"</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Two weeks into the checkout test, a well-meaning engineer edits the salt "to clean things up." Instantly, thousands of shoppers silently swap variants — people mid-purchase see the other checkout, the data mixes both experiences, and the experiment is unreadable. The right use: when instrumentation was broken, start a <b>new run</b> — a deliberate fresh shuffle with previous data excluded.</div>
+  <div class="vs">
+    <div class="col"><h4>How it works in Amplitude</h4><ul><li>Each flag gets a random salt at creation; it feeds the bucketing hash.</li><li>Changing it mid-flight causes users to <b>switch variants</b> — Amplitude gates salt changes behind approvals for a reason.</li><li>Legit uses: fresh randomization for a rerun, or de-correlating two experiments that share an audience.</li></ul></div>
+    <div class="col g"><h4>When a reshuffle is RIGHT</h4><ul><li>A <b>new experiment run</b> after fixing broken instrumentation — fresh shuffle, previous data excluded.</li><li>De-correlating two experiments that share an audience (same salt = correlated assignments).</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ STICKY ============ -->
+<div class="card" id="sticky">
+  <h3>📌 Sticky Bucketing</h3>
+  <div class="chips"><span class="chip">"Keep the variant you first saw"</span><span class="chip">Feature Experiment ✅ / Web Experiment ❌</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> <b>You keep the toy you started with.</b> Even if the teacher changes the rules about who gets which toy, kids who already have one keep theirs. Only kids arriving after the rule change follow the new rules. No child bursts into tears because their toy got swapped mid-play.</div>
+  <div class="anim">
+    <canvas id="cv-sticky" height="250"></canvas>
+    <div class="bar"><button class="play" onclick="stickyPlay(true)">▶ Ramp 50/50 → 20/80, sticky ON</button><button class="play ghost" onclick="stickyPlay(false)">▶ Same ramp, sticky OFF</button><span class="readout" id="sticky-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> They ramp a VIP-pricing test from 10% to 50% traffic. Without stickiness, early shoppers can get re-dealt — Priya saw the bundle at $39 on Monday and $45 on Thursday. Cue screenshots, support tickets, and a very awkward "price glitch" thread. Sticky bucketing locks Priya to her original price while new traffic fills the new split.</div>
+  <div class="vs">
+    <div class="col"><h4>How it works in Amplitude</h4><ul><li>Checks whether the user already experienced a variant (stored as a user property); if yes, serves the <b>last variant they saw</b>.</li><li>Protects against variant jumping from targeting/allocation changes.</li><li>Trade-off: users no longer strictly follow current allocation — turning it on/off mid-test can distort exposure ratios (SRM risk), so decide before launch.</li></ul></div>
+    <div class="col g"><h4>Fine print</h4><ul><li>Works with <b>remote evaluation only</b> — local evaluation doesn't support sticky bucketing (evaluation modes → Act 2 🚚).</li><li>Stores the last-seen variant as a user property.</li><li>Not available in Web Experiment; pick your stickiness strategy before launch, not during.</li></ul></div>
+  </div>
+</div>
+
+<div class="act"><h2>🚚 Act 2 — The variant reaches her</h2><p>Delivery mechanics: which keys unlock which surfaces, who computes the decision, and where your code runs.</p></div>
+
+<!-- ============ DEPLOYMENTS ============ -->
+<div class="card" id="deploy">
+  <h3>🚀 Deployments</h3>
+  <div class="chips"><span class="chip">Named keys that connect flags to app surfaces</span><span class="chip">Client keys vs server keys</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> Name badges for each door of your shop — the website door, the app door, and the kitchen door in the back. A flag is only handed out at doors you've badged. <b>The kitchen badge (server key) is powerful and stays secret; front-door badges (client keys) are safe to show in public.</b> Wrong badge at the wrong door? Nothing gets through.</div>
+  <div class="anim">
+    <canvas id="cv-deploy" height="250"></canvas>
+    <div class="bar"><button class="play" onclick="deployPlay()">▶ Deliver the flag</button><span class="readout" id="deploy-read">One experiment, three surfaces, three keys</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Three deployments: <i>web-storefront</i> (client), <i>ios-app</i> (client), <i>pricing-service</i> (server). The margin-sensitive dynamic-pricing experiment is attached only to <i>pricing-service</i> — so the web bundle can never leak tomorrow's price logic into view-source, and each surface's data stays cleanly attributed to its deployment key.</div>
+  <div class="vs">
+    <div class="col"><h4>How it works in Amplitude</h4><ul><li>A deployment = a named API key belonging to a project; you attach flags/experiments to deployments to deliver them.</li><li><b>Client deployments</b> ship in browsers/apps (visible, limited); <b>server deployments</b> stay in your backend (secret, required for local evaluation).</li><li>The key also stamps collected data, keeping results attribution clean.</li></ul></div>
+    <div class="col g"><h4>Key hygiene</h4><ul><li>Never embed a server key in client code — it's readable by anyone with dev tools.</li><li>One deployment per surface/environment keeps the blast radius of a mistake small.</li><li>The key stamps collected data, so per-surface attribution stays clean.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ REMOTE VS LOCAL ============ -->
+<div class="card" id="eval">
+  <h3>🌍 Local vs Remote Evaluation — WHO decides the variant</h3>
+  <div class="chips"><span class="chip">Remote: Amplitude's servers decide, enriched</span><span class="chip">Local: your SDK decides in-process, sub-millisecond</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> Asking HQ vs owning the rulebook. <b>Remote</b> = phone HQ every time: "what should this shopper see?" HQ knows everything about them (their history, their groups) but the call takes time. <b>Local</b> = you keep a synced copy of the rulebook and answer instantly yourself — lightning fast, but YOU must bring the shopper's details, because nobody at HQ is looking them up for you.</div>
+  <div class="anim">
+    <canvas id="cv-eval" height="260"></canvas>
+    <div class="bar"><button class="play" onclick="evalPlay('remote')">▶ Remote fetch</button><button class="play ghost" onclick="evalPlay('local')">▶ Local evaluation</button><span class="readout" id="eval-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The homepage hero test targets the "Lapsed VIPs" cohort → <b>remote evaluation</b>, because Amplitude's servers enrich the request with cohort membership, geolocation and historical user properties. Meanwhile the search-ranking experiment handles 30k requests/sec → <b>local evaluation</b>: flag configs sync to the SDK, each request evaluated in-process (Amplitude clocks JVM at 0.007ms). The trade they accept: locally there's no sticky bucketing, no enrichment, and cohorts match by User ID only.</div>
+  <div class="vs">
+    <div class="col"><h4>Remote gives you</h4><ul><li>Amplitude ID resolution + <b>user enrichment</b>: IP geolocation, canonicalized platform/language, historical user properties, transformed properties.</li><li><b>Cohort targeting</b> from Analytics (dynamic cohorts sync hourly — don't use for time-sensitive targeting).</li><li><b>Sticky bucketing</b> — remote only.</li></ul></div>
+    <div class="col g"><h4>Local gives you (and costs you)</h4><ul><li>Sub-millisecond, zero network per user — flag configs poll in the background; Node local eval can even run at the edge.</li><li>❌ No ID resolution, no enrichment, <b>no sticky bucketing</b>; cohorts by User ID only (Node/JVM/Go/Python/Ruby, not PHP).</li><li>Server-side local tracks <b>assignment</b> events, not exposures — use assignment as the exposure event in analysis.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ CLIENT VS SERVER 2x2 ============ -->
+<div class="card" id="matrix">
+  <h3>🧭 Client-side vs Server-side Experimentation — WHERE your code runs</h3>
+  <div class="chips"><span class="chip">Two independent questions → a 2×2 matrix</span><span class="chip">All 4 combos are real in Amplitude</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> People mash two questions into one. <b>Question 1: where does your code run?</b> In the shopper's hands (client = browser, app) or in your kitchen (server = backend). <b>Question 2: who decides the variant?</b> HQ (remote) or your own rulebook copy (local). They mix freely — 4 combos, each with a superpower and a trap. Confusing them is like mixing up "where the chef stands" with "who wrote the recipe."</div>
+  <div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;background:#FAFBFF;">
+    <div style="font-weight:700;color:var(--darkblue);margin-bottom:8px;">🧠 The 2-question chooser</div>
+    <div style="font-size:.9rem;"><b>Q1 — WHERE does the tested experience live?</b> A shopper could screenshot the difference (banner, copy, layout) → <b style="color:var(--blue)">CLIENT</b>. Invisible logic (pricing, ranking, API behavior) → <b style="color:#0EA05C">SERVER</b>. This one is decided for you by what you're testing.</div>
+    <div style="font-size:.9rem;margin-top:6px;"><b>Q2 — Brains or speed?</b> Need cohorts, geolocation, historical properties, sticky bucketing → <b style="color:var(--violet)">REMOTE</b>. Need sub-millisecond, high QPS, zero network → <b style="color:#B07D10">LOCAL</b>. This one you choose.</div>
+    <div style="font-size:.88rem;margin-top:8px;color:var(--muted);">Memory hook: <b>WHAT you test picks client or server. Brains or speed picks remote or local.</b></div>
+  </div>
+  <div class="anim">
+    <canvas id="cv-matrix" height="330"></canvas>
+    <div class="bar">
+      <button class="play" onclick="matrixPlay(0)">1️⃣ Client + Remote</button>
+      <button class="play ghost" onclick="matrixPlay(1)">2️⃣ Client + Local</button>
+      <button class="play ghost" onclick="matrixPlay(2)">3️⃣ Server + Remote</button>
+      <button class="play ghost" onclick="matrixPlay(3)">4️⃣ Server + Local</button>
+      <span class="readout" id="matrix-read"></span>
+    </div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty runs all four quadrants.</b> Press play — each ~7-second story shows one quadrant in action, with the payoff and the gotcha.</div>
+  <div class="anim">
+    <canvas id="cv-stories" height="250"></canvas>
+    <div class="bar">
+      <button class="play" onclick="storyPlay(0)">▶ ① Hero test</button>
+      <button class="play ghost" onclick="storyPlay(1)">▶ ② PDP badge</button>
+      <button class="play ghost" onclick="storyPlay(2)">▶ ③ Landing page</button>
+      <button class="play ghost" onclick="storyPlay(3)">▶ ④ Search @ 30k/s</button>
+      <span class="readout" id="story-read"></span>
+    </div>
+  </div>
+  <div class="vs">
+    <div class="col"><h4>How to choose</h4><ul><li>Need cohorts, geo, or historical user properties? → <b>remote</b>.</li><li>Need sub-ms at scale or edge workers? → <b>server + local</b>.</li><li>UI test with rich targeting and auto exposure tracking? → <b>client + remote</b> (the default for a reason).</li><li>Client + local is the niche pick: instant evaluation, no fetch — accept the visibility trade-off.</li></ul></div>
+    <div class="col g"><h4>Common gotchas</h4><ul><li>⚠️ <b>Client + local exposes targeting data</b>: target someone by email and every client can read that email in the flag config.</li><li>Server + local: no automatic exposure events — use the assignment event as your exposure event in analysis.</li><li>Remote dynamic cohorts sync <b>hourly</b> (up to 10M users) — pass user properties explicitly for time-sensitive targeting. Local cohort sync matches by User ID only (up to 50M).</li><li>Sticky bucketing works with remote only — plan ramps accordingly.</li></ul></div>
+  </div>
+</div>
+
+<div class="act"><h2>⚖️ Act 3 — AmpliBeauty reads the verdict</h2><p>The stats layer: the significance verdict, the p-value machinery underneath it, and the confidence net around the lift.</p></div>
+
+<!-- ============ STATISTICAL SIGNIFICANCE ============ -->
+<div class="card" id="sig">
+  <h3>⚖️ Statistical Significance</h3>
+  <div class="chips"><span class="chip">The verdict: "too weird to be luck"</span><span class="chip">Amplitude badge appears at ≥95% (α = 0.05)</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> A courtroom verdict. "Statistically significant" means the evidence is now strong enough that <i>"it was just luck"</i> stops being a reasonable defense. And evidence comes from exactly two places: <b>how big the effect is</b> and <b>how many witnesses (users) you have</b>. A whisper can be significant in a quiet room with many listeners; a shout can fail in a storm with three. Drag the sliders below and watch the verdict change.</div>
+  <div class="anim">
+    <canvas id="cv-sig" height="250"></canvas>
+    <div class="bar">
+      <span class="readout">Lift</span><input type="range" id="sig-lift" min="2" max="120" value="30" oninput="sigDraw()" style="accent-color:#FF7D78">
+      <span class="readout">Users</span><input type="range" id="sig-n" min="0" max="100" value="40" oninput="sigDraw()" style="accent-color:#6980FF">
+      <span class="readout" id="sig-read"></span>
+    </div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The lipstick shade recommender shows +0.4pt conversion on 4,000 shoppers → 78% significance. "Almost 95!" is not a verdict — it's an unfinished trial; keep running. Three weeks later at 80,000 shoppers the same lift reads 98% ✓. Meanwhile the gift-wrap upsell jumps +12% and hits significance in 3 days on just 6,000 shoppers. Same bar, two roads: <b>big effects convict fast, small effects need a bigger jury.</b></div>
+  <div class="vs">
+    <div class="col"><h4>Reading it in Amplitude</h4><ul><li>Significance = <b>1 − p-value</b>; the "Statistically significant" badge appears when it clears 95%.</li><li>Under the default sequential engine it's always-valid — the day it's cleared, you may call it.</li><li>Cross-check: the confidence interval clearing zero and the badge tell the same story.</li></ul></div>
+    <div class="col g"><h4>The classic traps</h4><ul><li><b>Statistically significant ≠ business significant</b>: with enough users a +0.05pp lift gets the badge and still isn't worth shipping — read the CI edges.</li><li><b>Not significant ≠ no effect</b> — often just not enough evidence yet (underpowered).</li><li>94.9% is not "basically 95" — the bar exists precisely so hope can't move it.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ P-VALUE ============ -->
+<div class="card" id="pval">
+  <h3>🎲 P-Value (what p = 0.05 actually means)</h3>
+  <div class="chips"><span class="chip">Amplitude shows significance = 1 − p</span><span class="chip">Conclusive when p &lt; 0.05</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> "How surprised should I be?" Pretend your change did <i>absolutely nothing</i>, and imagine running the experiment 100 times anyway — pure luck still produces small "wins" and "losses" every time. The p-value asks: <b>out of those 100 do-nothing experiments, how many would look as impressive as mine by luck alone?</b> p = 0.05 means only ~5 would. Your result is too weird to be luck — so we believe it's real.</div>
+  <div class="anim">
+    <canvas id="cv-pval" height="260"></canvas>
+    <div class="bar"><button class="play" onclick="pvalPlay()">▶ Run 200 do-nothing experiments</button><span class="readout" id="pval-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The Shade Finder quiz shows +0.5pt conversion with p = 0.008 → if the quiz truly did nothing, luck would beat this result in fewer than 1 in 100 tries. Ship it. The same test's "wishlist adds" metric shows +2% with p = 0.34 → luck produces that all the time. Shrug, don't tweet it.</div>
+  <div class="vs">
+    <div class="col"><h4>Reading it in Amplitude</h4><ul><li>Analysis view shows <b>significance = 1 − p-value</b> (e.g. p = 0.03 → 97% significance).</li><li>Default sequential testing means p-values are <b>always-valid</b> — safe to peek daily.</li><li>With multiple variants/metrics, Bonferroni raises the bar per test.</li></ul></div>
+    <div class="col g"><h4>The classic trap</h4><ul><li>p = 0.05 does NOT mean "95% chance the variant is better" — that sentence belongs to Bayesian's P(beat control).</li><li>It means: <i>if there were no real effect</i>, a result this extreme happens 5% of the time.</li><li>Not significant ≠ "no effect" — it can mean "not enough data yet."</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ CONFIDENCE INTERVAL ============ -->
+<div class="card" id="ci">
+  <h3>📏 Confidence Interval</h3>
+  <div class="chips"><span class="chip">The range of plausible lifts</span><span class="chip">Excludes 0 → statistically significant</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> Not a single number — a <b>net</b>. "The true lift is somewhere inside this net, and nets built this way catch the truth about 95 times out of 100." Early on the net is huge (could be anything); more data weaves it tighter. <b>If the entire net sits above zero, you can celebrate</b> — even the worst edge of it is still a win.</div>
+  <div class="anim">
+    <canvas id="cv-ci" height="260"></canvas>
+    <div class="bar"><button class="play" onclick="ciPlay()">▶ Rerun the experiment 20 times</button><span class="readout" id="ci-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Free-sampler test, revenue lift CI = <b>[+0.8%, +4.2%]</b>. Whole net above zero → significant. Better: even the pessimistic edge (+0.8%) covers the sampler program's cost, so finance signs off on the worst case. Compare the loyalty-badge test: CI = [−1.1%, +4.9%] — the net straddles zero, could genuinely be a loss. Keep running or accept uncertainty; don't declare victory.</div>
+  <div class="vs">
+    <div class="col"><h4>Reading it in Amplitude</h4><ul><li>Shown per metric per variant around the lift; under default sequential testing the CI starts wide and tightens (the "peeking tax").</li><li>Decision rule: CI fully above 0 → ship signal; fully below 0 → regression; straddles 0 → not conclusive yet.</li></ul></div>
+    <div class="col g"><h4>The classic trap</h4><ul><li>"95% CI" doesn't mean 95% of users improved — it's about how often such nets capture the true value across repeated experiments.</li><li>A significant-but-tiny lift can still be commercially meaningless: read the interval's edges, not just the star.</li></ul></div>
+  </div>
+</div>
+
+<!-- ============ DURATION ESTIMATOR ============ -->
+<div class="act"><h2>🔮 Epilogue — Don't start trials you can't finish</h2><p>The Duration Estimator inverts Act 3: given the verdict you want, how much evidence do you need — and do you even have the traffic to collect it?</p></div>
+
+<div class="card" id="duration">
+  <h3>📐 The Duration Estimator</h3>
+  <div class="chips"><span class="chip">Pre-launch viability check, inside experiment setup</span><span class="chip">Auto-pulls ~30 days of real traffic + baseline from Analytics</span></div>
+  <div class="eli5"><b>🧒 ELI6:</b> A fuel check before a road trip. How far is the destination? (<b>MDE</b> — small effects live far away.) How fast is your car? (<b>traffic per day</b>.) How sure do you want to be of arriving? (<b>confidence</b>.) The clever part: instead of asking you to guess your speed, it reads your <b>actual fuel history</b> — the last ~30 days of real traffic and conversion from Analytics. Some destinations turn out to be 632 days away. Those trips you simply don't take.</div>
+  <div class="anim">
+    <canvas id="cv-duration" height="300"></canvas>
+    <div class="bar">
+      <span class="readout">Traffic/day</span><input type="range" id="dur-t" min="0" max="100" value="55" oninput="durDraw()" style="accent-color:#6980FF">
+      <span class="readout">Baseline conv.</span><input type="range" id="dur-b" min="5" max="300" value="50" oninput="durDraw()" style="accent-color:#FF7D78">
+      <span class="readout" id="dur-read"></span>
+    </div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty triages the backlog:</b> Three ideas, one Duration Scenarios table. Hero banner redesign (expect ~8% lift) → about 7 weeks at 90% confidence: <b>run it</b>. CTA copy tweak (~5%) → about 4 months: <b>viable only at 85% confidence</b> for a directional read. Footer link color (~2%) → <b>632 days</b>: politely deleted from the backlog, and the PM who suggested it buys coffee. That's the estimator's real job — not predicting, <b>prioritizing</b>.</div>
+  <div class="vs">
+    <div class="col"><h4>What makes it powerful</h4><ul><li>Grounded in <b>your own data</b>: pulls ~29–30 days of traffic and the live baseline conversion for your chosen metric — no spreadsheet guessing.</li><li>The <b>Duration Scenarios table</b> (confidence × MDE) turns it into a backlog prioritizer: kill unviable tests before engineering builds them.</li><li>Levers when a test runs too long: bigger MDE, lower confidence (when stakes allow), higher-traffic page, fuller rollout, fewer variants.</li></ul></div>
+    <div class="col g"><h4>The fine print</h4><ul><li><b>T-tests only</b> — sequential, Bayesian and bandit methods aren't part of this pre-launch workflow.</li><li>It's a <b>different tool</b> from the live in-flight duration estimate on a running experiment (which uses sequential testing + observed data) — the two numbers won't match, and that's expected.</li><li>An estimate, not a promise: accuracy depends on the proxy event you pick and on recent traffic staying representative.</li></ul></div>
+  </div>
+</div>
+
+<div class="warn">⚠️ <b>Note:</b> Educational summary grounded in the public Amplitude docs linked below. Product defaults, availability and limits (e.g. cohort sizes) evolve — always confirm against the live documentation.</div>
+
+<div class="foot">
+  <b>Sources — Amplitude docs:</b>
+  <a href="https://amplitude.com/docs/feature-experiment/under-the-hood/experiment-randomization">How randomization works</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/implementation">Experiment evaluation (bucketing key & salt)</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/advanced-techniques/sticky-bucketing">Sticky bucketing</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/troubleshooting/variant-jumping">Variant jumping</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/workflow/feature-flag-rollouts">Flags & salt warning</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/workflow/configure">Deployments</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/remote-evaluation">Remote evaluation</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/local-evaluation">Local evaluation</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/cohort-targeting">Cohort targeting</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/analysis-view">Analysis view (significance = 1 − p)</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/under-the-hood/experiment-sequential-testing">Sequential testing</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/troubleshooting/new-experiment-run">New experiment run</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/feature-and-web-experiment-functional-comparison">Web vs Feature comparison</a> ·
+  <a href="https://amplitude.com/docs/web-experiment/targeting">Web Experiment targeting</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/workflow/experiment-estimate-duration">Duration Estimator</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/experiment-theory/experiment-set-mde">MDE &amp; live duration estimates</a>
+  <br><b>Sources — Statsig Warehouse Native docs:</b>
+  <a href="https://docs.statsig.com/statsig-warehouse-native/introduction">About Warehouse Native</a> ·
+  <a href="https://docs.statsig.com/understanding-platform">Platform overview (Cloud vs WHN)</a> ·
+  <a href="https://docs.statsig.com/statsig-warehouse-native/analysis-tools/data-privacy">Egress, privacy &amp; storage</a> ·
+  <a href="https://docs.statsig.com/statsig-warehouse-native/features/reloads">How Pulse loads run</a> ·
+  <a href="https://docs.statsig.com/statsig-warehouse-native/guides/sdks">WHN with SDKs</a>
+</div>
+</div>
+
+<script>
+// ---------- shared helpers (hardened) ----------
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(r,w/2,h/2);
+    this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r); this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r); this.arcTo(x,y,x+w,y,r); this.closePath(); return this;};
+}
+function ctx2d(id){const c=document.getElementById(id);
+  if(!c.dataset.h){c.dataset.h=c.getAttribute('height');}
+  const H=+c.dataset.h, dpr=window.devicePixelRatio||1;
+  c.style.height=H+'px';
+  const w=c.clientWidth||900;
+  const pw=Math.round(w*dpr), ph=Math.round(H*dpr);
+  if(c.width!==pw)c.width=pw; if(c.height!==ph)c.height=ph;
+  const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); return {x,w,h:H};}
+const anims={};
+function loop(key,fn){cancelAnimationFrame(anims[key]); let t0=null;
+  function step(ts){if(!t0)t0=ts; let go=false;
+    try{go=fn((ts-t0)/1000)!==false;}catch(e){console.error(key,e);go=false;}
+    if(go) anims[key]=requestAnimationFrame(step);}
+  anims[key]=requestAnimationFrame(step);}
+const C={bg:'#0D1226',grid:'#232B4E',txtA:'#AAB6E8',blue:'#4083FF',lilac:'#6980FF',violet:'#A373FF',pink:'#FF7D78',red:'#F23845',green:'#2ECC8F',white:'#F0F3FF',gold:'#F5C542'};
+function clear(g){g.x.fillStyle=C.bg;g.x.fillRect(0,0,g.w,g.h);}
+function label(g,s,x,y,col,size,align,bold){g.x.fillStyle=col||C.txtA;g.x.font=(bold?'700 ':'')+(size||12)+'px Poppins,Helvetica,sans-serif';g.x.textAlign=align||'left';g.x.fillText(s,x,y);g.x.textAlign='left';}
+function dot(g,x,y,r,col){g.x.beginPath();g.x.arc(x,y,r,0,7);g.x.fillStyle=col;g.x.fill();}
+function ease(k){return k<0?0:k>1?1:k*k*(3-2*k);}
+// tiny deterministic hash for demos
+function h32(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)%100;}
+
+// ---------- BUCKETING: sorting hat ----------
+function bucketDrawBase(g){
+  clear(g);
+  label(g,'hash( user ID + salt ) → number 0–99 → variant range',14,22,C.txtA,12);
+  // hash machine
+  g.x.strokeStyle=C.violet; g.x.lineWidth=2; g.x.fillStyle='#171F3D';
+  g.x.beginPath(); g.x.roundRect(g.w/2-70,95,140,46,12); g.x.fill(); g.x.stroke();
+  label(g,'HASH 🔮',g.w/2,124,C.violet,14,'center',true);
+  // buckets
+  [[g.w*0.3,'Control  (0–49)',C.lilac],[g.w*0.7,'Treatment  (50–99)',C.pink]].forEach(([x,name,col])=>{
+    g.x.strokeStyle=col; g.x.lineWidth=2;
+    g.x.beginPath(); g.x.moveTo(x-60,190); g.x.lineTo(x-60,232); g.x.lineTo(x+60,232); g.x.lineTo(x+60,190); g.x.stroke();
+    label(g,name,x,248,col,11.5,'center');
+  });
+}
+const shoppers=[['Yi Shiean',37],['Ana',72],['Ken',15]];
+function bucketPlay(){
+  loop('bu',t=>{
+    const g=ctx2d('cv-bucket'); bucketDrawBase(g);
+    let allDone=true;
+    shoppers.forEach(([name,hv],i)=>{
+      const start=i*0.55, k=ease((t-start)/1.3);
+      if(k<1)allDone=false;
+      if(t<start)return;
+      const tx = hv<50? g.w*0.3-20+i*18 : g.w*0.7-20+i*18;
+      // path: top -> machine -> bucket
+      let x,y;
+      if(k<0.45){const kk=k/0.45; x=g.w/2-120+i*120*(1-kk)+ (g.w/2-(g.w/2-120+i*120))*kk*0; x=(g.w/2-120+i*120)+(g.w/2-(g.w/2-120+i*120))*kk; y=48+kk*60;}
+      else{const kk=(k-0.45)/0.55; x=g.w/2+(tx-g.w/2)*kk; y=118+kk*100;}
+      const col=hv<50?C.lilac:C.pink;
+      dot(g,x,y,9,k>0.45?col:C.white);
+      label(g,name,x,y-14,C.white,11,'center');
+      if(k>0.45)label(g,hv,x,y+4,'#0D1226',10,'center',true);
+    });
+    document.getElementById('bucket-read').textContent = allDone?
+      'Replay it — Yi Shiean is ALWAYS 37, Ana always 72, Ken always 15. Same input, same bucket, forever.':
+      'Hashing shoppers…';
+    return !allDone||t<3;
+  });
+}
+
+// ---------- SALT: reshuffle grid ----------
+let saltName='aK3x9';
+function saltGrid(g,salt,flipK,changed){
+  clear(g);
+  label(g,'Each square = one shopper. Color = which variant the hash gives them.',14,22,C.txtA,12);
+  label(g,'salt = "'+salt+'"',g.w-20,22,C.gold,13,'right',true);
+  const cols=10,rows=4,sz=34,gap=10;
+  const x0=(g.w-cols*(sz+gap))/2, y0=54;
+  for(let i=0;i<cols*rows;i++){
+    const hv=h32('user'+i+salt);
+    const col=hv<50?C.lilac:C.pink;
+    const cx=x0+(i%cols)*(sz+gap), cy=y0+Math.floor(i/cols)*(sz+gap);
+    // flip animation: scaleX from 1->0->1 switching color midway
+    let sc=1, drawCol=col;
+    if(changed&&flipK<1){const ph=Math.min(1,Math.max(0,flipK*1.6-(i%cols)*0.05));
+      sc=Math.abs(Math.cos(ph*Math.PI)); if(ph<0.5){const old=h32('user'+i+'aK3x9'); drawCol=old<50?C.lilac:C.pink;}}
+    g.x.save(); g.x.translate(cx+sz/2,cy+sz/2); g.x.scale(Math.max(0.04,sc),1);
+    g.x.fillStyle=drawCol; g.x.beginPath(); g.x.roundRect(-sz/2,-sz/2,sz,sz,7); g.x.fill(); g.x.restore();
+  }
+}
+function saltPlay(change){
+  const newSalt=change?'Zq7#p':'aK3x9';
+  loop('sa',t=>{
+    const g=ctx2d('cv-salt');
+    const k=Math.min(1,t/1.5);
+    saltGrid(g,change?newSalt:'aK3x9',k,change);
+    document.getElementById('salt-read').textContent = change?
+      (k<1?'Changing salt… every hash recomputes':'New salt = total reshuffle. Mid-experiment, this is how you contaminate your data. 💀'):
+      'Same salt → nobody moves. Boring is the point.';
+    if(change)saltName=newSalt;
+    return k<1;
+  });
+}
+
+// ---------- STICKY: ramp allocation ----------
+function stickyPlay(sticky){
+  // 24 existing users assigned 50/50; ramp to 20/80; 12 new users arrive under 20/80
+  const oldU=[]; for(let i=0;i<24;i++)oldU.push({t:h32('old'+i)<50?0:1});
+  const newU=[]; for(let i=0;i<12;i++)newU.push({t:h32('nw'+i+'B')<20?0:1});
+  loop('st',t=>{
+    const g=ctx2d('cv-sticky'); clear(g);
+    const k=Math.min(1,t/3.2);
+    label(g,'Week 1: 50/50 split. Week 2: allocation changed to 20/80.',14,22,C.txtA,12);
+    label(g,sticky?'STICKY ON 📌':'STICKY OFF ⚠️',g.w-20,22,sticky?C.green:C.red,13,'right',true);
+    const y1=80,y2=170;
+    label(g,'Existing shoppers',14,y1-24,C.white,12,'left',true);
+    label(g,'New shoppers (arrive after the change)',14,y2-24,C.white,12,'left',true);
+    oldU.forEach((u,i)=>{
+      const x=40+i*((g.w-80)/24), phase=Math.min(1,Math.max(0,(k*3.2-1.2)/0.8));
+      let team=u.t;
+      let flash=false;
+      if(!sticky&&phase>0){const re=h32('old'+i+'ramp'); const nt=re<20?0:1; if(nt!==u.t&&phase>((i%8)/8)){team=nt; flash=phase<((i%8)/8)+0.25;}}
+      dot(g,x,y1,10,flash?C.red:(team?C.pink:C.lilac));
+      if(sticky&&phase>0)label(g,'🔒',x,y1-14,C.white,9,'center');
+    });
+    newU.forEach((u,i)=>{
+      const start=1.6+i*0.09, kk=ease((t-start)/0.5);
+      if(t<start)return;
+      const x=40+i*((g.w-80)/12);
+      dot(g,x,y2-30*(1-kk),9,u.t?C.pink:C.lilac);
+    });
+    const jumped=!sticky&&k>0.8;
+    label(g,sticky?'Old shoppers keep their variant. New traffic follows 20/80. Peace. ✓':
+      (jumped?'Some existing shoppers SWAPPED variants mid-test → mixed experiences + dirty data':''),
+      g.w/2,g.h-16,sticky?C.green:C.red,12.5,'center',true);
+    document.getElementById('sticky-read').textContent=sticky?
+      'Locked shoppers 🔒 stay put even though allocation changed':
+      'Red flashes = variant jumping. Priya just saw two different prices.';
+    return k<1;
+  });
+}
+
+// ---------- DEPLOYMENTS ----------
+function deployPlay(){
+  loop('de',t=>{
+    const g=ctx2d('cv-deploy'); clear(g);
+    const fx=g.w/2, fy=60;
+    // flag node
+    g.x.fillStyle='#171F3D'; g.x.strokeStyle=C.gold; g.x.lineWidth=2;
+    g.x.beginPath(); g.x.roundRect(fx-110,fy-26,220,44,12); g.x.fill(); g.x.stroke();
+    label(g,'🚩 dynamic-pricing experiment',fx,fy+2,C.gold,12.5,'center',true);
+    const surf=[[g.w*0.18,'🖥 Web storefront','client key · public',C.lilac,true],
+                [g.w*0.5,'📱 iOS app','client key · public',C.lilac,true],
+                [g.w*0.82,'⚙️ Pricing service','server key · SECRET',C.green,true]];
+    surf.forEach(([x,name,key,col],i)=>{
+      const y=200;
+      g.x.fillStyle='#11162B'; g.x.strokeStyle=col; g.x.lineWidth=1.5;
+      g.x.beginPath(); g.x.roundRect(x-78,y-24,156,52,10); g.x.fill(); g.x.stroke();
+      label(g,name,x,y-4,C.white,12,'center',true);
+      label(g,key,x,y+15,col,10.5,'center');
+      // edge
+      g.x.strokeStyle=C.grid; g.x.beginPath(); g.x.moveTo(fx,fy+18); g.x.lineTo(x,y-24); g.x.stroke();
+    });
+    // packets: only to pricing-service (attached deployment); others get "not attached"
+    const k=(t%2.2)/2.2;
+    // packet to server key
+    const px=fx+(g.w*0.82-fx)*k, py=fy+18+(200-24-fy-18)*k;
+    dot(g,px,py,7,C.gold);
+    // ghost packets to client surfaces bounce at 60%
+    [[g.w*0.18],[g.w*0.5]].forEach(([x])=>{
+      const kk=Math.min(k,0.6), bx=fx+(x-fx)*kk, by=fy+18+(200-24-fy-18)*kk;
+      dot(g,bx,by,6,'#39426E');
+      if(k>0.6)label(g,'✗ not attached',x,150,C.red,10.5,'center');
+    });
+    label(g,'The flag only flows to deployments it\'s attached to. Server keys never ship to browsers.',g.w/2,g.h-14,C.txtA,11.5,'center');
+    document.getElementById('deploy-read').textContent='Attached: pricing-service ✓ — web & iOS deliberately excluded';
+    return t<6.6;
+  });
+}
+
+// ---------- REMOTE VS LOCAL EVAL ----------
+function evalPlay(mode){
+  loop('ev',t=>{
+    const g=ctx2d('cv-eval'); clear(g);
+    const midY=70, locY=185;
+    // remote lane
+    label(g,'REMOTE — client-side default',14,26,C.lilac,12,'left',true);
+    const phX=60, cloudX=g.w-120;
+    label(g,'📱',phX,midY+8,C.white,26,'center');
+    g.x.fillStyle='#171F3D'; g.x.strokeStyle=C.lilac;
+    g.x.beginPath(); g.x.roundRect(cloudX-88,midY-26,176,52,12); g.x.fill(); g.x.stroke();
+    label(g,'☁️ Amplitude servers',cloudX,midY-6,C.lilac,11.5,'center',true);
+    label(g,'+ user props  + cohorts',cloudX,midY+13,C.txtA,10.5,'center');
+    g.x.strokeStyle=C.grid; g.x.beginPath(); g.x.moveTo(phX+22,midY); g.x.lineTo(cloudX-90,midY); g.x.stroke();
+    // local lane
+    label(g,'LOCAL — server-side, sub-millisecond',14,146,C.green,12,'left',true);
+    g.x.fillStyle='#171F3D'; g.x.strokeStyle=C.green;
+    g.x.beginPath(); g.x.roundRect(40,locY-26,220,56,12); g.x.fill(); g.x.stroke();
+    label(g,'⚙️ Your backend + SDK',150,locY-6,C.green,11.5,'center',true);
+    label(g,'📖 rulebook (flag configs)',150,locY+13,C.txtA,10.5,'center');
+    g.x.setLineDash([4,4]); g.x.strokeStyle='#39426E';
+    g.x.beginPath(); g.x.moveTo(260,locY-16); g.x.lineTo(g.w-160,locY-40); g.x.stroke(); g.x.setLineDash([]);
+    label(g,'syncs configs every few seconds ↻',g.w-155,locY-44,'#7B87B6',10.5);
+    if(mode==='remote'){
+      const k=(Math.min(t,1.6))/1.6;
+      const x = k<0.5? phX+22+(cloudX-112-phX)*(k/0.5) : cloudX-90-(cloudX-112-phX)*((k-0.5)/0.5);
+      dot(g,x,midY,7,k<0.5?C.white:C.gold);
+      label(g,k<0.5?'who is user 84binc?':'variant: treatment ✓',x,midY-14,k<0.5?C.txtA:C.gold,10.5,'center');
+      const ms=Math.round(k*180);
+      label(g,'⏱ '+ms+' ms round-trip',phX+30,midY+34,C.txtA,11);
+      document.getElementById('eval-read').textContent=k<1?'Network round-trip in flight…':'~100–200ms, but the answer is enriched with cohorts + historical user properties';
+      return k<1;
+    }else{
+      const n=Math.min(24,Math.floor(t*12));
+      for(let i=0;i<n;i++){const x=300+(i%12)*((g.w-380)/12), y=locY+ (i<12?-4:14);
+        dot(g,x,y,4,C.green);}
+      label(g,'⚡ '+ (n*2500).toLocaleString() +' evaluations, <1ms each, zero network calls',300,locY+40,C.green,11.5);
+      document.getElementById('eval-read').textContent=n<24?'Evaluating in-process…':'Local = the rulebook answers instantly. You supply the user details yourself.';
+      return n<24;
+    }
+  });
+}
+
+// ---------- CLIENT VS SERVER 2x2 MATRIX ----------
+const QUAD=[
+  {name:'① Client + Remote', where:'📱 browser / app', who:'☁️ HQ decides', tag:'THE DEFAULT', col:C.blue,
+   line:'App fetches variants from Amplitude → enriched with cohorts, geo, history. Auto exposure tracking.',
+   pro:'Richest targeting: cohorts, geolocation, historical props + sticky bucketing. Exposure auto-tracked when the variant is used.',
+   con:'One network fetch — fetching at startup can add latency/flicker. Dynamic cohorts sync hourly.',
+   read:'Default for UI tests: rich targeting, auto exposure events, one fetch at startup.'},
+  {name:'② Client + Local', where:'📱 browser / app', who:'📖 rulebook on device', tag:'⚠️ VISIBLE CONFIG', col:C.gold,
+   line:'Flag config ships to the device, evaluates instantly. But targeting rules are readable by anyone.',
+   pro:'Instant on-device evaluation — no per-user fetch, best for flicker-sensitive UI.',
+   con:'Targeting rules readable by any client (even a targeted email). No enrichment, no sticky, no client-side cohort targeting.',
+   read:'Zero-flicker, no fetch — trade-off: targeting data is visible client-side.'},
+  {name:'③ Server + Remote', where:'⚙️ your backend', who:'☁️ HQ decides', tag:'ENRICHED + PRIVATE', col:C.violet,
+   line:'Backend calls the evaluation API per user → full enrichment, config never leaves Amplitude.',
+   pro:'Full enrichment + cohorts while configs stay private; CDN edge caching speeds repeat fetches.',
+   con:'A network hop per user at scale; auto-tracked event is the assignment — use it as exposure in analysis.',
+   read:'Server-rendered pages with cohort/geo targeting; adds one network hop per user.'},
+  {name:'④ Server + Local', where:'⚙️ your backend', who:'📖 rulebook in-process', tag:'🏎 PERFORMANCE KING', col:C.green,
+   line:'Configs poll in the background; each request evaluated in-process. JVM: 0.007ms average.',
+   pro:'Sub-millisecond at any request rate, zero network per user; Node can run at the edge; cohorts up to 50M via ID sync.',
+   con:'You pass user properties yourself; no sticky bucketing; no auto exposure — track assignment deliberately.',
+   read:'High-QPS systems (search, pricing). The performance pick when targeting is simple.'}
+];
+let matrixSel=0;
+function matrixDraw(g,sel,pulse){
+  clear(g);
+  const x0=150,y0=64,cw=(g.w-x0-30)/2,ch=92;
+  label(g,'WHO decides the variant →',x0+cw,26,C.txtA,11.5,'center');
+  label(g,'REMOTE (HQ)',x0+cw/2,46,C.lilac,12,'center',true);
+  label(g,'LOCAL (rulebook)',x0+cw*1.5,46,C.green,12,'center',true);
+  label(g,'WHERE your code runs ↓',14,26,C.txtA,11.5);
+  label(g,'CLIENT 📱',60,y0+ch/2+4,C.white,12,'center',true);
+  label(g,'SERVER ⚙️',60,y0+ch*1.5+14,C.white,12,'center',true);
+  const cells=[[0,0,0],[1,1,0],[2,0,1],[3,1,1]]; // idx, col(remote/local), row(client/server)
+  cells.forEach(([qi,cx,cy])=>{
+    const q=QUAD[qi], x=x0+cx*cw, y=y0+cy*(ch+10);
+    const on=qi===sel;
+    g.x.fillStyle=on?'#1B2447':'#11162B';
+    g.x.strokeStyle=on?q.col:C.grid; g.x.lineWidth=on?2.5+pulse:1.2;
+    g.x.beginPath(); g.x.roundRect(x,y,cw-10,ch,12); g.x.fill(); g.x.stroke();
+    label(g,q.name,x+14,y+24,on?q.col:C.white,12.5,'left',true);
+    label(g,q.tag,x+cw-24,y+24,on?q.col:'#57608C',10,'right',true);
+    label(g,q.where+'   ·   '+q.who,x+14,y+44,on?C.white:'#7B87B6',10.5);
+    if(on){
+      // wrap detail line
+      const words=q.line.split(' '); let ln='',yy=y+64;
+      words.forEach(w=>{if((ln+w).length>58){label(g,ln,x+14,yy,C.txtA,10.5);ln=w+' ';yy+=14;}else ln+=w+' ';});
+      label(g,ln,x+14,yy,C.txtA,10.5);
+    }
+  });
+  // pros/cons strip for the selected quadrant
+  const q=QUAD[sel], sy=y0+2*(ch+10)+14;
+  const wrap=(txt,pre,yy,col)=>{const words=(pre+txt).split(' ');let ln='';
+    words.forEach(w=>{if((ln+w).length>118){label(g,ln,x0,yy,col,11);ln=w+' ';yy+=15;}else ln+=w+' ';});
+    label(g,ln,x0,yy,col,11); return yy+15;};
+  let yy=wrap(q.pro,'✓  ',sy,C.green);
+  wrap(q.con,'⚠️  ',yy+2,C.gold);
+}
+function matrixPlay(sel){
+  matrixSel=sel;
+  loop('mx',t=>{
+    const g=ctx2d('cv-matrix');
+    matrixDraw(g,matrixSel,Math.abs(Math.sin(t*3))*1.5);
+    document.getElementById('matrix-read').textContent=QUAD[matrixSel].read;
+    return t<2.5;
+  });
+}
+function matrixCycle(){
+  loop('mx',t=>{
+    const g=ctx2d('cv-matrix');
+    const sel=Math.min(3,Math.floor(t/2.2));
+    matrixSel=sel;
+    matrixDraw(g,sel,Math.abs(Math.sin(t*3))*1.5);
+    document.getElementById('matrix-read').textContent=QUAD[sel].read;
+    return t<8.8;
+  });
+}
+
+// ---------- WAREHOUSE-NATIVE VS CLOUD ----------
+function whnPlay(mode){
+  loop('wh',t=>{
+    const g=ctx2d('cv-whn'); clear(g);
+    if(mode==='cloud'){
+      storyHeader(g,'CLOUD — the vendor\'s kitchen cooks a copy of your data',C.lilac);
+      const apX=90, clX=g.w/2, dbX=g.w-110, midY=115;
+      label(g,'📱',apX,midY+8,C.white,28,'center'); label(g,'your app',apX,midY+32,C.txtA,10,'center');
+      box(g,clX-105,midY-38,210,72,C.lilac);
+      label(g,'☁️ vendor cloud',clX,midY-14,C.lilac,12,'center',true);
+      label(g,'🗄 copy of your data',clX,midY+5,C.txtA,10,'center');
+      label(g,'⚙️ stats engine',clX,midY+22,C.txtA,10,'center');
+      box(g,dbX-80,midY-28,160,52,C.green);
+      label(g,'📊 dashboard',dbX,midY-4,C.green,11.5,'center',true);
+      label(g,'significance ✓',dbX,midY+14,C.txtA,10,'center');
+      if(t<2){cap(g,'1 · Variant key goes down to the app — it knows what to render');
+        const k=ph(t,0.2,1.8); dot(g,clX-107-(clX-107-apX-22)*k,midY,6,C.gold);}
+      else if(t<4.5){cap(g,'2 · Events stream up — the vendor stores its own COPY of your data');
+        for(let i=0;i<5;i++){const k=ph(t,2+i*0.35,3.4+i*0.35); if(k>0&&k<1)dot(g,apX+22+(clX-107-apX-22)*k,midY-12+i*6,4,C.white);}}
+      else if(t<6.5){cap(g,'3 · Stats engine + duration estimators crunch that copy, in the vendor cloud');
+        const a=t*4; g.x.strokeStyle=C.gold; g.x.lineWidth=2.5;
+        g.x.beginPath(); g.x.arc(clX,midY+45,12,a,a+4.4); g.x.stroke();}
+      else{cap(g,'4 · Significance lands on the dashboard, near-real-time');
+        const k=ph(t,6.5,7.6); dot(g,clX+107+(dbX-82-clX-107)*k,midY,6,C.green);}
+      document.getElementById('whn-read').textContent='Fast to start, no data team — metrics limited to what the SDK tracked.';
+      return t<8.2;
+    }else{
+      storyHeader(g,'WAREHOUSE-NATIVE — the chef cooks in YOUR kitchen',C.green);
+      const coX=115, whX=g.w-170, midY=110;
+      box(g,coX-95,midY-38,190,72,C.violet);
+      label(g,'🖥 Statsig console',coX,midY-14,C.violet,12,'center',true);
+      label(g,'semantic layer:',coX,midY+5,C.txtA,10,'center');
+      label(g,'your metric definitions',coX,midY+22,C.txtA,10,'center');
+      box(g,whX-130,midY-48,260,92,C.green);
+      label(g,'🏦 YOUR warehouse',whX,midY-24,C.green,12.5,'center',true);
+      label(g,'events · finance revenue',whX,midY-5,C.txtA,10,'center');
+      label(g,'returns · margin · offline orders',whX,midY+13,C.txtA,10,'center');
+      label(g,'🔒 raw data never leaves',whX,midY+33,C.gold,10,'center',true);
+      label(g,'📱',60,215,C.white,22,'center'); label(g,'app: assignment via SDK, unchanged',185,219,C.txtA,10,'center');
+      if(t<2.4){cap(g,'1 · Bucketing + the key to the app work EXACTLY like cloud (SDK or your own system)');
+        const k=ph(t,0.3,2.2); dot(g,coX-40+(60-coX+40)*k,midY+36+(210-midY-36)*k,5,C.gold);}
+      else if(t<4.8){cap(g,'2 · Instead of data going out, SQL pipelines ship INTO the warehouse');
+        const k=ph(t,2.4,4.4); label(g,'📜 SQL',coX+97+(whX-132-coX-97)*k,midY-2,C.violet,13,'center',true);}
+      else if(t<7){cap(g,'3 · Stats run beside your tables — net revenue, returns, margin, all in place');
+        const a=t*4; g.x.strokeStyle=C.gold; g.x.lineWidth=2.5;
+        g.x.beginPath(); g.x.arc(whX,midY+62,12,a,a+4.4); g.x.stroke();}
+      else{cap(g,'4 · Only a tiny results summary (<1,000 rows) travels back to the console');
+        const k=ph(t,7,8.2); label(g,'📄',whX-132-(whX-132-coX-97)*k,midY-2,C.green,13,'center');}
+      document.getElementById('whn-read').textContent='Single source of truth + privacy — trade: nightly batch reloads, your compute.';
+      return t<8.8;
+    }
+  });
+}
+
+// ---------- AMPLIBEAUTY QUADRANT STORIES ----------
+function ph(t,a,b){return Math.min(1,Math.max(0,(t-a)/(b-a)));} // phase 0..1
+function box(g,x,y,w,h,col,fill){g.x.fillStyle=fill||'#171F3D';g.x.strokeStyle=col;g.x.lineWidth=1.8;
+  g.x.beginPath();g.x.roundRect(x,y,w,h,10);g.x.fill();g.x.stroke();}
+function cap(g,s){label(g,s,g.w/2,g.h-12,C.white,12.5,'center',true);}
+function storyHeader(g,s,col){label(g,s,14,24,col,12.5,'left',true);}
+
+function story1(g,t){ // client + remote: hero test
+  clear(g); storyHeader(g,'① CLIENT + REMOTE — the homepage hero test',C.blue);
+  const phX=90, clX=g.w-140, midY=100;
+  label(g,'📱',phX,midY+10,C.white,30,'center');
+  label(g,'Yi Shiean · lapsed VIP 💤',phX,midY+34,C.txtA,10.5,'center');
+  box(g,clX-95,midY-30,190,58,C.lilac);
+  label(g,'☁️ Amplitude servers',clX,midY-8,C.lilac,11.5,'center',true);
+  label(g,'cohort: Lapsed VIPs ✓  geo ✓  history ✓',clX,midY+11,C.txtA,9.5,'center');
+  if(t<2){ cap(g,'Yi Shiean opens the homepage — the browser asks Amplitude which variant she gets');
+    const k=ph(t,0.4,2); dot(g,phX+26+(clX-97-phX-26)*k,midY,6,C.white);}
+  else if(t<3.6){ cap(g,'Amplitude enriches: "she\'s in the Lapsed VIPs cohort" → treatment');
+    const k=ph(t,2,3.6); dot(g,clX-97-(clX-97-phX-26)*k,midY,7,C.gold);}
+  else{ cap(g,t<5.6?'Hero swaps — for lapsed VIPs only':'Exposure auto-logged the moment it renders ✓');
+    const bx=g.w/2-130, by=150;
+    box(g,bx,by,260,48,t<5.6?C.pink:C.green,'#241322');
+    label(g,'💄 We miss you — 20% off Skincare',g.w/2,by+22,C.pink,12,'center',true);
+    if(t>=5.6)label(g,'📍 exposure tracked ✓',g.w/2,by+40,C.green,10.5,'center',true);
+  }
+  document.getElementById('story-read').textContent='Payoff: cohort targeting + auto exposure. Cost: one fetch at startup.';
+  return t<7.5;
+}
+function story2(g,t){ // client + local: PDP badge
+  clear(g); storyHeader(g,'② CLIENT + LOCAL — the zero-flicker "Only 3 left!" badge',C.gold);
+  const phX=110, midY=105;
+  label(g,'📱',phX,midY+10,C.white,30,'center');
+  label(g,'📖 rulebook synced earlier',phX,midY+34,C.txtA,10,'center');
+  if(t<1.6){cap(g,'The flag config already lives on the device — no call needed');}
+  else if(t<3.4){cap(g,'Product page paints instantly, badge decided on-device');
+    box(g,g.w/2-60,70,180,70,C.grid);
+    label(g,'✨ Rose Glow Serum',g.w/2+30,95,C.white,11,'center');
+    box(g,g.w/2-48,105,110,24,C.pink,'#2A1420');
+    label(g,'🔥 Only 3 left!',g.w/2+7,121,C.pink,10.5,'center',true);
+    label(g,'⚡ 0ms flicker',g.w/2+30,160,C.green,12,'center',true);}
+  else{cap(g,t<5.2?'The trade: anyone can download and read that rulebook…':'…so keep rules generic — never ship emails or secrets in the config');
+    label(g,'🕵️',g.w-130,95,C.white,26,'center');
+    box(g,g.w-260,115,240,66,t<5.2?C.gold:C.red,'#241D10');
+    label(g,'rules: 50% traffic · platform = iOS ✓',g.w-140,136,C.txtA,10,'center');
+    label(g,'target: vip@ampl…com',g.w-160,158,t<5.2?C.txtA:C.red,10,'center');
+    if(t>=5.2){g.x.strokeStyle=C.red;g.x.lineWidth=2;g.x.beginPath();
+      g.x.moveTo(g.w-225,152);g.x.lineTo(g.w-100,162);g.x.stroke();
+      label(g,'✗',g.w-88,162,C.red,14,'center',true);}
+    box(g,60,70,180,70,C.grid);
+    label(g,'✨ Rose Glow Serum',150,95,C.white,11,'center');
+    box(g,72,105,110,24,C.pink,'#2A1420');
+    label(g,'🔥 Only 3 left!',127,121,C.pink,10.5,'center',true);}
+  document.getElementById('story-read').textContent='Payoff: instant paint, zero flicker. Cost: config is public — generic rules only.';
+  return t<7;
+}
+function story3(g,t){ // server + remote: landing page
+  clear(g); storyHeader(g,'③ SERVER + REMOTE — the server-rendered landing page',C.violet);
+  const svX=g.w/2-40, clX=g.w-130, vX=80, midY=105;
+  label(g,'🧍',vX,midY+8,C.white,26,'center');
+  label(g,'visitor from SG',vX,midY+30,C.txtA,10,'center');
+  box(g,svX-80,midY-28,160,54,C.green);
+  label(g,'⚙️ backend renders',svX,midY-6,C.green,11.5,'center',true);
+  label(g,'the page HTML',svX,midY+12,C.txtA,10,'center');
+  box(g,clX-80,midY-28,160,54,C.lilac);
+  label(g,'☁️ Amplitude',clX,midY-6,C.lilac,11.5,'center',true);
+  label(g,'cohort ✓ · geo: SG ✓',clX,midY+12,C.txtA,9.5,'center');
+  if(t<1.6){cap(g,'Visitor hits a campaign URL — the backend builds the page');
+    const k=ph(t,0.2,1.6); dot(g,vX+20+(svX-82-vX-20)*k,midY,6,C.white);}
+  else if(t<3.8){cap(g,'Backend asks Amplitude per visitor — enrichment stays private');
+    const k=ph(t,1.6,2.7), k2=ph(t,2.7,3.8);
+    if(k<1)dot(g,svX+82+(clX-82-svX-82)*k,midY,6,C.white);
+    else dot(g,clX-82-(clX-82-svX-82)*k2,midY,7,C.gold);}
+  else{cap(g,t<5.6?'Personalized HTML ships — flag config never left Amplitude':'⚠️ One network hop per visitor: fine here, not in the checkout hot path');
+    box(g,vX-60,160,260,44,C.violet,'#1A1430');
+    label(g,'✨ SG exclusive: Great Skincare Sale bundle',vX+70,186,C.violet,11,'center',true);
+    if(t>=5.6)label(g,'⏱ +1 hop / visitor',g.w-140,180,C.gold,11.5,'center',true);}
+  document.getElementById('story-read').textContent='Payoff: enrichment + private configs. Cost: a network hop per visitor.';
+  return t<7;
+}
+function story4(g,t){ // server + local: search
+  clear(g); storyHeader(g,'④ SERVER + LOCAL — search ranking at 30,000 requests/sec',C.green);
+  const svX=g.w/2, midY=105;
+  box(g,svX-110,midY-32,220,64,C.green);
+  label(g,'⚙️ search service',svX,midY-8,C.green,12,'center',true);
+  label(g,'📖 rulebook in memory (polls for updates)',svX,midY+12,C.txtA,9.5,'center');
+  // request stream
+  const n=Math.floor(t*16);
+  for(let i=0;i<Math.min(n,60);i++){
+    const k=((t*1.4)+i*0.13)%1;
+    const y=midY-20+((i*37)%40);
+    dot(g,30+(g.w-60)*k,y,3,k>0.42&&k<0.58?C.gold:'#39426E');
+  }
+  const reqs=Math.min(30000,Math.round(t*6000));
+  label(g,'⚡ '+reqs.toLocaleString()+' req/sec · 0.007ms each · zero network',svX,midY+52,C.green,12,'center',true);
+  if(t<2.4)cap(g,'Every search request evaluated in-process — the rulebook is already in memory');
+  else if(t<4.6)cap(g,'You pass shopper properties in the request — nobody enriches for you');
+  else cap(g,'📩 Track the assignment event deliberately — it becomes your exposure in analysis');
+  document.getElementById('story-read').textContent='Payoff: sub-ms at any scale. Cost: bring your own props, track your own events.';
+  return t<7;
+}
+const STORY_FNS=[story1,story2,story3,story4];
+function storyPlay(i){loop('sy',t=>STORY_FNS[i](ctx2d('cv-stories'),t));}
+
+// ---------- WEB VS FEATURE EXPERIMENT ----------
+function webfeatPlay(mode){
+  loop('wf',t=>{
+    const g=ctx2d('cv-webfeat'); clear(g);
+    if(mode==='web'){
+      storyHeader(g,'🎨 WEB EXPERIMENT — the sticker kit',C.pink);
+      // mini browser
+      const bx=g.w/2-170, by=48, bw=340, bh=140;
+      box(g,bx,by,bw,bh,C.grid,'#11162B');
+      g.x.fillStyle='#1B2447'; g.x.fillRect(bx+1,by+1,bw-2,22);
+      label(g,'amplibeauty.com',bx+bw/2,by+16,C.txtA,10,'center');
+      const swapped=t>2.2;
+      label(g,swapped?'Skincare that works':'Glow up your routine',bx+bw/2,by+60,swapped?C.gold:C.white,15,'center',true);
+      box(g,bx+bw/2-55,by+82,110,26,C.pink,'#2A1420');
+      label(g,'Shop now',bx+bw/2,by+99,C.pink,11,'center',true);
+      // cursor
+      const cx=bx+bw/2+ (t<1.6? 160-ph(t,0.2,1.6)*160 : 0);
+      label(g,'🖱',cx+40,by+58,C.white,16,'center');
+      if(t<2.2)cap(g,'Marketer opens the visual editor and points at the live headline…');
+      else if(t<4.2)cap(g,'…types the new copy. That\'s the whole deployment. 🎉');
+      else cap(g,'Live by lunch — no engineer, no release cycle. Websites only, no sticky bucketing.');
+      if(swapped)label(g,'✨ variant live',bx+bw-8,by+40,C.gold,10.5,'right',true);
+      document.getElementById('webfeat-read').textContent='Point, edit, publish — the no-code door into the same stats engine.';
+      return t<6;
+    }else{
+      storyHeader(g,'🔧 FEATURE EXPERIMENT — the workshop',C.green);
+      const cx0=60, cy=52;
+      box(g,cx0-12,cy-8,400,96,C.grid,'#0A0F22');
+      const lines=["const v = experiment.variant('shade-finder')","if (v.value === 'treatment') {","   showShadeQuiz()   // new flow","}"];
+      const chars=Math.floor(t*30);
+      let used=0;
+      lines.forEach((ln,i)=>{const take=Math.max(0,Math.min(ln.length,chars-used));
+        label(g,ln.slice(0,take),cx0,cy+14+i*20,i===2?C.gold:C.green,12);
+        used+=ln.length;});
+      if(t>3.2){
+        const k=ph(t,3.2,4.6);
+        box(g,cx0-12,168,180,30,C.violet,'#171F3D');
+        label(g,'🚀 deploy '+Math.round(k*100)+'%',cx0+78,188,C.violet,11.5,'center',true);
+        g.x.fillStyle=C.violet+'55'; g.x.fillRect(cx0-11,169,178*k,28);
+      }
+      if(t>4.6){
+        label(g,'📱',g.w-160,110,C.white,30,'center');
+        label(g,'quiz live in-app ✓',g.w-160,140,C.green,11,'center',true);
+        label(g,'⚙️ + checkout API variant ✓',g.w-160,162,C.green,10.5,'center');
+      }
+      cap(g,t<3.2?'Engineers wire the variant into real code — client AND server':
+          t<4.6?'Ships through the normal release pipeline…':'Any surface, full toolkit: deployments, sticky bucketing, the whole 2×2.');
+      document.getElementById('webfeat-read').textContent='Needs a pull request — buys unlimited scope.';
+      return t<6.6;
+    }
+  });
+}
+
+// ---------- STATISTICAL SIGNIFICANCE (interactive) ----------
+function ncdf(z){const t=1/(1+0.2316419*Math.abs(z));const d=0.3989423*Math.exp(-z*z/2);
+  let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
+function sigDraw(){
+  const g=ctx2d('cv-sig'); clear(g);
+  const lift=(+document.getElementById('sig-lift').value)/10; // %
+  const n=Math.round(Math.pow(10,3+(+document.getElementById('sig-n').value)/50)); // 1k..100k
+  const z=(lift/100)*Math.sqrt(n)*0.45;
+  const p=Math.max(1e-6,2*(1-ncdf(z)));
+  const sig=Math.min(99.99,(1-p)*100);
+  label(g,'Evidence = effect size × sample size. Same lift, more users → the needle climbs.',14,22,C.txtA,12);
+  // gauge
+  const cx=g.w/2, cy=g.h-58, R=118;
+  const arc=(a0,a1,col,w)=>{g.x.strokeStyle=col;g.x.lineWidth=w;g.x.beginPath();
+    g.x.arc(cx,cy,R,Math.PI+a0*Math.PI,Math.PI+a1*Math.PI);g.x.stroke();};
+  arc(0,0.95,'#2C3765',16);
+  arc(0.95,1,C.green+'66',16);
+  arc(0,Math.min(sig/100,1),sig>=95?C.green:C.lilac,16);
+  // 95% tick
+  const ta=Math.PI+0.95*Math.PI;
+  label(g,'95%',cx+Math.cos(ta)*(R+24),cy+Math.sin(ta)*(R+24)+4,C.green,11,'center',true);
+  // needle
+  const na=Math.PI+Math.min(sig/100,1)*Math.PI;
+  g.x.strokeStyle=C.white; g.x.lineWidth=3;
+  g.x.beginPath(); g.x.moveTo(cx,cy); g.x.lineTo(cx+Math.cos(na)*(R-24),cy+Math.sin(na)*(R-24)); g.x.stroke();
+  label(g,sig.toFixed(1)+'%',cx,cy-26,sig>=95?C.green:C.white,26,'center',true);
+  label(g,'significance (= 1 − p)',cx,cy-6,C.txtA,10.5,'center');
+  const verdict=sig>=95?['⚖️ STAT SIG ✓ — luck is no longer a reasonable defense',C.green]:
+                        ['🧑‍⚖️ Not yet — keep collecting evidence',C.gold];
+  label(g,verdict[0],cx,cy+30,verdict[1],13,'center',true);
+  document.getElementById('sig-read').textContent='lift +'+lift.toFixed(1)+'% · '+n.toLocaleString()+' users · p ≈ '+p.toFixed(3);
+}
+
+// ---------- P-VALUE ----------
+function pvalPlay(){
+  // simulate 200 A/A lifts ~ N(0,1)
+  const res=[]; for(let i=0;i<200;i++){let s=0;for(let j=0;j<6;j++)s+=Math.random();res.push((s-3)/Math.sqrt(0.5));}
+  const obs=2.65; // observed z
+  loop('pv',t=>{
+    const g=ctx2d('cv-pval'); clear(g);
+    const n=Math.min(200,Math.floor(t*80));
+    const x0=50,x1=g.w-30,y1=g.h-46;
+    const X=v=>x0+((v+4)/8)*(x1-x0);
+    label(g,'200 experiments where the change does NOTHING. Each block = one fake "lift" from pure luck.',14,22,C.txtA,12);
+    // histogram
+    const bins={}, bw=(x1-x0)/32;
+    for(let i=0;i<n;i++){const b=Math.floor((res[i]+4)/8*32); bins[b]=(bins[b]||0)+1;
+      const cnt=bins[b];
+      g.x.fillStyle = (x0+b*bw>=X(obs))?C.red:C.lilac+'CC';
+      g.x.beginPath(); g.x.roundRect(x0+b*bw+1,y1-cnt*7,bw-2,6,2); g.x.fill();
+    }
+    // axis + zero
+    g.x.strokeStyle=C.grid; g.x.beginPath(); g.x.moveTo(x0,y1+2); g.x.lineTo(x1,y1+2); g.x.stroke();
+    label(g,'no lift',X(0),y1+20,C.txtA,10.5,'center');
+    label(g,'← luck-losses     luck-wins →',X(0),y1+34,'#7B87B6',10,'center');
+    // observed marker
+    if(n>30){
+      g.x.strokeStyle=C.gold; g.x.lineWidth=2.5; g.x.setLineDash([6,4]);
+      g.x.beginPath(); g.x.moveTo(X(obs),36); g.x.lineTo(X(obs),y1); g.x.stroke(); g.x.setLineDash([]);
+      label(g,'YOUR result',X(obs),32,C.gold,11.5,'center',true);
+    }
+    if(n>=200){
+      const beat=res.filter(v=>v>=obs).length;
+      const p=Math.max(1,beat)/200;
+      label(g,'Luck beat you in '+beat+' / 200 tries  →  p ≈ '+p.toFixed(3)+'  →  '+(p<0.05?'too weird to be luck ✓ REAL':'could easily be luck'),g.w/2,52,p<0.05?C.green:C.red,13,'center',true);
+      document.getElementById('pval-read').textContent='Amplitude shows this as significance = '+((1-p)*100).toFixed(1)+'%  (1 − p)';
+    }else{
+      document.getElementById('pval-read').textContent='Running do-nothing experiments… '+n+'/200';
+    }
+    return n<200||t<4;
+  });
+}
+
+// ---------- CONFIDENCE INTERVAL ----------
+function ciPlay(){
+  // true lift = 2.5%; 20 reruns produce CIs; ~1 misses
+  const runs=[]; for(let i=0;i<20;i++){let s=0;for(let j=0;j<6;j++)s+=Math.random();
+    const centre=2.5+(s-3)*1.5; const half=1.9+Math.random()*0.5; runs.push([centre-half,centre+half]);}
+  runs[13]=[4.6,8.4]; // force one miss
+  loop('ci',t=>{
+    const g=ctx2d('cv-ci'); clear(g);
+    const x0=60,x1=g.w-30,rowH=(g.h-90)/20;
+    const X=v=>x0+((v+3)/12)*(x1-x0);
+    label(g,'Same experiment, rerun 20 times. Each bar = that run\'s 95% net. Purple line = the TRUE lift (+2.5%).',14,22,C.txtA,12);
+    // true line
+    g.x.strokeStyle=C.violet; g.x.lineWidth=2;
+    g.x.beginPath(); g.x.moveTo(X(2.5),40); g.x.lineTo(X(2.5),g.h-44); g.x.stroke();
+    label(g,'truth',X(2.5),g.h-30,C.violet,10.5,'center');
+    // zero line
+    g.x.strokeStyle=C.grid; g.x.setLineDash([4,4]);
+    g.x.beginPath(); g.x.moveTo(X(0),40); g.x.lineTo(X(0),g.h-44); g.x.stroke(); g.x.setLineDash([]);
+    label(g,'0%',X(0),g.h-30,C.txtA,10.5,'center');
+    const n=Math.min(20,Math.floor(t*7));
+    let missed=0;
+    for(let i=0;i<n;i++){
+      const [lo,hi]=runs[i]; const y=44+i*rowH;
+      const caught=lo<=2.5&&hi>=2.5; if(!caught)missed++;
+      g.x.strokeStyle=caught?C.blue:C.red; g.x.lineWidth=3;
+      g.x.beginPath(); g.x.moveTo(X(lo),y); g.x.lineTo(X(hi),y); g.x.stroke();
+      dot(g,X((lo+hi)/2),y,3.5,caught?C.white:C.red);
+    }
+    if(n>=20){
+      label(g,(20-missed)+' of 20 nets caught the truth — that\'s what "95% confidence" promises on repeat.',g.w/2,g.h-10,C.green,12,'center',true);
+      document.getElementById('ci-read').textContent='Decision rule: if a net sits entirely right of the 0% line, even its worst edge is a win → ship.';
+    }else{
+      document.getElementById('ci-read').textContent='Casting nets… '+n+'/20';
+    }
+    return n<20||t<4;
+  });
+}
+
+
+// ---------- DURATION ESTIMATOR (interactive) ----------
+function durDraw(){
+  const g=ctx2d('cv-duration'); clear(g);
+  const traffic=Math.round(Math.pow(10,2.3+(+document.getElementById('dur-t').value)/40));
+  const base=(+document.getElementById('dur-b').value)/10/100; // fraction
+  label(g,'Duration Scenarios — days to significance at 80% power. Your traffic, your baseline, nine what-ifs.',14,22,C.txtA,12);
+  const confs=[[85,1.4395],[90,1.645],[95,1.96]], mdes=[2,5,8], zb=0.8416;
+  const x0=170, y0=72, cw=(g.w-x0-30)/3, chh=52;
+  label(g,'MDE — how big a change you\'re hunting →',x0+cw*1.5,46,C.txtA,11,'center');
+  mdes.forEach((m,ci)=>label(g,'+'+m+'%',x0+ci*cw+cw/2,64,C.pink,12,'center',true));
+  label(g,'confidence ↓',60,64,C.txtA,10.5,'center');
+  confs.forEach(([cf,za],ri)=>{
+    const y=y0+ri*(chh+10);
+    label(g,cf+'%',60,y+chh/2+4,C.lilac,12,'center',true);
+    mdes.forEach((m,ci)=>{
+      const p1=base, p2=Math.min(0.999,base*(1+m/100));
+      const n=Math.pow(za+zb,2)*(p1*(1-p1)+p2*(1-p2))/Math.pow(p2-p1,2);
+      const days=Math.ceil(2*n/traffic);
+      const x=x0+ci*cw;
+      const col=days<=30?C.green:days<=90?C.lilac:days<=180?C.gold:C.red;
+      g.x.fillStyle='#11162B'; g.x.strokeStyle=col; g.x.lineWidth=1.6;
+      g.x.beginPath(); g.x.roundRect(x,y,cw-12,chh,10); g.x.fill(); g.x.stroke();
+      const txt=days>730?(days/365).toFixed(1)+' yrs 💀':days>180?days+' d ⚠️':days+' days';
+      label(g,txt,x+(cw-12)/2,y+chh/2+0,col,13,'center',true);
+      label(g,days<=30?'fast ✓':days<=90?'viable':days<=180?'long':'don\'t build it',x+(cw-12)/2,y+chh/2+18,col,9.5,'center');
+    });
+  });
+  label(g,'Bigger effects and lower stakes finish sooner. If every cell is red — test something bolder or somewhere busier.',g.w/2,g.h-14,C.txtA,11.5,'center');
+  document.getElementById('dur-read').textContent=traffic.toLocaleString()+' users/day · baseline '+(base*100).toFixed(1)+'% · 2 variants, full rollout';
+}
+
+// ---------- boot ----------
+const autos={'cv-whn':()=>whnPlay('cloud'),'cv-bucket':bucketPlay,'cv-salt':()=>saltPlay(false),'cv-sticky':()=>stickyPlay(true),'cv-deploy':deployPlay,'cv-eval':()=>evalPlay('remote'),'cv-matrix':matrixCycle,'cv-stories':()=>storyPlay(0),'cv-webfeat':()=>webfeatPlay('web'),'cv-sig':sigDraw,'cv-pval':pvalPlay,'cv-ci':ciPlay,'cv-duration':durDraw};
+const seen=new Set();
+function safe(fn){try{fn();}catch(e){console.error(e);}}
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!seen.has(e.target.id)){seen.add(e.target.id); safe(autos[e.target.id]);}})},{threshold:0.35});
+  Object.keys(autos).forEach(id=>io.observe(document.getElementById(id)));
+}else{Object.values(autos).forEach(safe);}
+// static first frames
+safe(()=>{const g=ctx2d('cv-bucket');bucketDrawBase(g);});
+safe(()=>{const g=ctx2d('cv-salt');saltGrid(g,'aK3x9',1,false);});
+// active-button highlight: clicking a scenario button in any bar makes IT the highlighted one
+document.querySelectorAll('.anim .bar').forEach(bar=>{
+  const btns=[...bar.querySelectorAll('button.play')];
+  if(btns.length<2)return;
+  btns.forEach(b=>b.addEventListener('click',()=>{btns.forEach(o=>o.classList.add('ghost'));b.classList.remove('ghost');}));
+});
+</script>
+
+<div style="max-width:980px;margin:30px auto 0;padding:14px 20px;font-size:.78rem;color:#5A6382;border-top:1px solid #E4E8F5">⚠️ AI-generated learning aid — validate specific claims against <a href="https://docs.amplitude.com" style="color:#0052F2">docs.amplitude.com</a> or your SME before using externally.</div>
+<div id="lastUpdated" style="max-width:980px;margin:10px auto 0;padding:0 20px 26px;font-size:.74rem;color:#8a92ab;text-align:center;font-family:inherit">Last updated: 4 July 2026</div>
+<!-- scroll-to-top -->
+<button id="scrollTopBtn" aria-label="Scroll to top" style="position:fixed;bottom:22px;right:22px;z-index:9999;width:46px;height:46px;border-radius:50%;border:none;background:#0052F2;color:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,26,79,.35);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .25s,transform .25s">↑</button>
+<script>
+(function(){
+  var b=document.getElementById('scrollTopBtn');
+  function t(){var on=window.scrollY>350;b.style.opacity=on?'1':'0';b.style.pointerEvents=on?'auto':'none';b.style.transform=on?'translateY(0)':'translateY(8px)';}
+  window.addEventListener('scroll',t,{passive:true});t();
+  b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  b.addEventListener('mouseenter',function(){b.style.background='#001A4F';});
+  b.addEventListener('mouseleave',function(){b.style.background='#0052F2';});
+})();
+</script>
+<script id="statsScrollspy">
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+  var map=[];
+  links.forEach(function(a){var el=document.getElementById(a.getAttribute('href').slice(1));if(el)map.push([el,a]);});
+  if(!map.length)return;
+  var lock=false, lockT=null;
+  function setActive(a){links.forEach(function(x){x.classList.remove('active')});if(a)a.classList.add('active');}
+  function onScroll(){
+    if(lock)return;
+    var y=window.scrollY+130, cur=map[0][1];
+    for(var i=0;i<map.length;i++){if(map[i][0].getBoundingClientRect().top+window.scrollY<=y)cur=map[i][1];}
+    setActive(cur);
+  }
+  links.forEach(function(a){a.addEventListener('click',function(){
+    setActive(a); lock=true; clearTimeout(lockT); lockT=setTimeout(function(){lock=false;onScroll();},900);
+  });});
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>
