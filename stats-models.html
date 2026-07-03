@@ -22,8 +22,8 @@
   nav{position:sticky; top:0; z-index:50; background:var(--bg); display:flex; gap:8px; overflow-x:auto; padding:12px 20px; max-width:980px; margin:0 auto;}
   nav a{white-space:nowrap; text-decoration:none; color:var(--muted); font-size:13px; font-weight:600; padding:9px 13px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); transition:.15s;}
   nav a:hover{color:var(--blue); border-color:var(--lilac);}
-  nav a:first-child{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(0,82,242,.25);}
-  nav a:first-child:hover{color:#fff;}
+  nav a.active{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(0,82,242,.25);}
+  nav a.active:hover{color:#fff;}
   .wrap{max-width:980px; margin:0 auto; padding:32px 20px 80px;}
   h2.section-head{font-size:1.35rem; margin:44px 0 6px; color:var(--darkblue);}
   .sub{color:var(--muted); font-size:.95rem; margin-bottom:16px;}
@@ -574,6 +574,29 @@ let rT=null; window.addEventListener('resize',()=>{clearTimeout(rT); rT=setTimeo
   b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
   b.addEventListener('mouseenter',function(){b.style.background='#001A4F';});
   b.addEventListener('mouseleave',function(){b.style.background='#0052F2';});
+})();
+</script>
+
+<!-- scrollspy for section nav -->
+<script id="statsScrollspy">
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+  var map=[];
+  links.forEach(function(a){var el=document.getElementById(a.getAttribute('href').slice(1));if(el)map.push([el,a]);});
+  if(!map.length)return;
+  var lock=false, lockT=null;
+  function setActive(a){links.forEach(function(x){x.classList.remove('active')});if(a)a.classList.add('active');}
+  function onScroll(){
+    if(lock)return;
+    var y=window.scrollY+130, cur=map[0][1];
+    for(var i=0;i<map.length;i++){if(map[i][0].getBoundingClientRect().top+window.scrollY<=y)cur=map[i][1];}
+    setActive(cur);
+  }
+  links.forEach(function(a){a.addEventListener('click',function(){
+    setActive(a); lock=true; clearTimeout(lockT); lockT=setTimeout(function(){lock=false;onScroll();},900);
+  });});
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
 })();
 </script>
 </body>

@@ -36,3 +36,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.6 | 2026-07-03 | stats-models.html section nav restyled as concept-map-style pill tabs (content-width, card pills, blue lead pill) — CSS only |
 | v1.7 | 2026-07-03 | Hero unit-pill rows added to statsig-101.html and reading-results.html, matching courses 3 & 4 |
 | v1.8 | 2026-07-03 | "Course N of 4" hero badges on courses 1, 3, 4 (course 1 badge text updated; badges added to 3 & 4) |
+| v1.9 | 2026-07-03 | stats-models nav: fixed stuck highlight — replaced static first-pill styling with a scrollspy (.active follows the section in view and on click) |
