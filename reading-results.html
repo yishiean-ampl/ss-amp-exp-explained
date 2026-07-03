@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Statsig Reading Results Animated",
+  "schemaVersion": 1,
+  "description": "Animated interactive course: Reading Experiment Results Like a Pro (Statsig course 2 of 4). Guided scorecard tour, animated participation funnel, impact extrapolation, SRM scale, whale/CUPED and CI-narrowing animations, ship/no-ship decision simulator, searchable Statsig→Amplitude terminology decoder (31 terms), and a 5-question quiz. Grounded in the learn-statsig validated corpus."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Experiment Results Like a Pro</title>
+<style>
+:root { color-scheme: light;
+  --blue:#0052F2; --dark:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+  --pink:#FF7D78; --red:#F23845; --green:#00A86B; --amber:#F5A623;
+  --bg:#F7F8FC; --card:#FFFFFF; --ink:#0B1023; --muted:#5A627E; --border:#E4E8F5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gellix','Poppins',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 20px 80px}
+.hero{background:linear-gradient(120deg,var(--dark) 0%,#0A2A7A 55%,var(--violet) 130%);color:#fff;border-radius:20px;padding:32px 30px;margin-bottom:18px;position:relative;overflow:hidden}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.hero p{margin-top:8px;color:#C9D6FF;max-width:680px;font-size:14.5px}
+.badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:3px 12px;font-size:12px;margin-bottom:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{border:1.5px solid var(--border);background:var(--card);border-radius:12px;padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s;font-family:inherit}
+.tab:hover{border-color:var(--lilac);color:var(--blue)}
+.tab.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(0,82,242,.25)}
+.panel{display:none;animation:fade .25s ease}
+.panel.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px}
+h2{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+h3{font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--dark)}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:6px}
+p{font-size:14px}
+.eli6{background:linear-gradient(135deg,#FFF4F0,#FFF9E8);border:1.5px solid #FFD9C7;border-radius:14px;padding:14px 18px;margin:14px 0}
+.eli6 .tag{font-size:11px;font-weight:800;letter-spacing:.8px;color:#C05621;text-transform:uppercase}
+.eli6 p{margin-top:6px;font-size:13.5px}
+.amp{background:#F0F4FF;border:1.5px solid #C7D4FF;border-radius:14px;padding:14px 18px;margin:14px 0}
+.amp .tag{font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--blue);text-transform:uppercase}
+.amp p{margin-top:6px;font-size:13.5px}
+.keyline{background:#EEF3FF;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;font-weight:600;color:var(--dark)}
+.play{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin:8px 0}
+.play:hover{background:#0043C7}
+.stage{background:#0D1330;border-radius:16px;padding:20px;margin:12px 0;position:relative;overflow:hidden}
+.stage .cap{color:#8FA3E8;font-size:12px;margin-bottom:10px;font-weight:600}
+.flips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0}
+.flip{perspective:900px;height:200px;cursor:pointer}
+.flipin{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .flipin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;padding:15px;display:flex;flex-direction:column;justify-content:center}
+.face.front{background:#FFF1F1;border:1.5px solid #FFC9C9}
+.face.back{background:var(--dark);color:#fff;transform:rotateY(180deg)}
+.face .lbl{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;margin-bottom:8px}
+.face.front .lbl{color:var(--red)} .face.back .lbl{color:var(--lilac)}
+.face p{font-size:12.5px;line-height:1.45}
+.face .hint{margin-top:auto;font-size:11px;color:var(--muted);text-align:right}
+.face.back .hint{color:#8FA3E8}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:var(--dark);color:#fff;text-align:left;padding:9px 12px;font-size:12px}
+th:first-child{border-radius:10px 0 0 0}th:last-child{border-radius:0 10px 0 0}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:nth-child(even) td{background:#FAFBFF}
+.mq{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.mq.close{background:#DFF5E8;color:#0A7A44}.mq.partial{background:#FFF3D6;color:#9A6B00}.mq.none{background:#FFE3E3;color:#B01E28}
+.search{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;font-size:14px;font-family:inherit;margin:6px 0 10px}
+.search:focus{outline:none;border-color:var(--blue)}
+
+/* ---- scorecard tour ---- */
+.sc{border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin:12px 0}
+.sc table{margin:0}
+.sc td,.sc th{transition:background .3s,box-shadow .3s}
+.sc .hl{background:#FFF3D6 !important;box-shadow:inset 0 0 0 2px var(--amber)}
+.tourbox{background:#EEF3FF;border:1.5px solid #C7D4FF;border-radius:12px;padding:12px 16px;margin-top:10px;font-size:13.5px;min-height:74px}
+.tourbtns{display:flex;gap:8px;margin-top:8px}
+.good{color:#0A7A44;font-weight:700}.bad{color:#B01E28;font-weight:700}.mid{color:#9A6B00;font-weight:700}
+
+/* ---- funnel anim ---- */
+.fun{display:flex;gap:16px;align-items:stretch}
+.fzone{flex:1;border:1.5px dashed #3D4A85;border-radius:12px;padding:12px;min-height:180px}
+.fzone h5{color:#C9D6FF;font-size:12px;font-weight:700;margin-bottom:8px}
+.fzone .cnt{color:#fff;font-size:20px;font-weight:800}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.dot{width:14px;height:14px;border-radius:50%;background:#3D4A85;opacity:0;transform:scale(.3)}
+.dot.in{animation:pop .35s forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+.dot.part{background:var(--green);box-shadow:0 0 8px rgba(0,168,107,.8)}
+.dot.ghost{background:#2A3468}
+
+/* ---- CI narrowing ---- */
+.citrack{height:44px;background:#1A2350;border-radius:10px;position:relative;margin:26px 0 8px}
+.cizero{position:absolute;left:50%;top:-8px;bottom:-8px;width:2px;background:#fff;opacity:.6}
+.cizero::after{content:'0%';position:absolute;top:-18px;left:-8px;font-size:10px;color:#fff;font-weight:700}
+.cibar{position:absolute;top:11px;height:22px;border-radius:999px;background:var(--amber);transition:left 1s ease,width 1s ease,background 1s}
+.cidot2{position:absolute;top:16px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left 1s ease}
+.daylbl{color:#C9D6FF;font-size:13px;font-weight:700;margin-top:6px}
+
+/* ---- impact extrapolation ---- */
+.imp{display:flex;align-items:flex-end;gap:30px;height:200px;padding:0 10px;margin-top:10px}
+.impcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.impbar{width:70%;border-radius:10px 10px 0 0;transition:height 1.4s ease}
+.impbar.obs{background:var(--green);height:0}
+.impbar.proj{background:repeating-linear-gradient(45deg,#6980FF,#6980FF 8px,#4A5DC7 8px,#4A5DC7 16px);height:0;opacity:.85}
+.implbl{color:#C9D6FF;font-size:12px;margin-top:8px;text-align:center}
+.impval{color:#fff;font-weight:800;font-size:15px;margin-bottom:6px;opacity:0;transition:opacity .5s}
+
+/* ---- SRM scale ---- */
+.scale{position:relative;height:230px;margin-top:6px}
+.beam{position:absolute;left:50%;top:52px;width:340px;height:8px;background:#8FA3E8;border-radius:4px;transform:translateX(-50%) rotate(0deg);transform-origin:center;transition:transform 1.2s ease}
+.post{position:absolute;left:50%;top:52px;width:10px;height:120px;background:#5A6BB8;transform:translateX(-50%);border-radius:4px}
+.pan{position:absolute;top:66px;width:110px;text-align:center;transition:transform 1.2s ease}
+.pan .tray{background:#1A2350;border:1.5px solid #3D4A85;border-radius:10px;padding:10px 6px;color:#fff;font-weight:800;font-size:16px}
+.pan .plbl{color:#8FA3E8;font-size:11px;margin-top:5px}
+.panL{left:calc(50% - 285px)}.panR{left:calc(50% + 175px)}
+.srmflag{position:absolute;left:50%;transform:translateX(-50%);bottom:0;background:var(--red);color:#fff;font-weight:800;font-size:13px;border-radius:10px;padding:8px 16px;opacity:0;transition:opacity .6s}
+.srmflag.on{opacity:1;animation:pulse 1s infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 18px rgba(242,56,69,.8)}}
+
+/* ---- whale ---- */
+.pond{position:relative;height:170px;background:#0F1840;border-radius:12px;overflow:hidden;margin-top:8px}
+.fish{position:absolute;font-size:15px;opacity:0;animation:swim .5s forwards}
+@keyframes swim{to{opacity:1}}
+.whale{font-size:44px}
+.avgline{position:absolute;left:0;right:0;height:2.5px;background:var(--amber);transition:top 1.2s ease}
+.avglbl{position:absolute;right:8px;background:var(--amber);color:#4A2E00;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 8px;transition:top 1.2s ease}
+
+/* ---- decision sim ---- */
+.sim{border:1.5px solid var(--border);border-radius:14px;padding:16px;margin:12px 0;background:#FAFBFF}
+.sim .scen{font-size:13.5px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.simbtns{display:flex;gap:8px;flex-wrap:wrap}
+.simbtn{border:1.5px solid var(--border);background:#fff;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.simbtn:hover{border-color:var(--lilac)}
+.simbtn.right{background:#DFF5E8;border-color:#0A7A44}
+.simbtn.wrongpick{background:#FFE3E3;border-color:var(--red)}
+.simfb{display:none;margin-top:10px;border-radius:10px;padding:11px 14px;font-size:13px;background:#EEF3FF;border:1.5px solid #C7D4FF}
+.sim.done .simfb{display:block}
+
+/* ---- quiz ---- */
+.q{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
+.q .qn{font-size:11px;font-weight:800;color:var(--blue);letter-spacing:.7px;text-transform:uppercase}
+.q h4{font-size:14px;margin:8px 0 12px;line-height:1.5}
+.opt{display:block;width:100%;text-align:left;background:#F7F8FD;border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;font-size:13px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:.15s}
+.opt:hover{border-color:var(--lilac)}
+.opt.correct{background:#DFF5E8;border-color:#0A7A44}
+.opt.wrong{background:#FFE3E3;border-color:var(--red)}
+.opt:disabled{cursor:default}
+.expl{display:none;margin-top:10px;border-radius:10px;padding:12px 14px;font-size:13px;background:#EEF3FF;border:1.5px solid #C7D4FF}
+.q.answered .expl{display:block}
+.score{background:linear-gradient(120deg,var(--dark),var(--blue));color:#fff;border-radius:16px;padding:22px;text-align:center;display:none}
+.score.show{display:block}
+.score .big{font-size:34px;font-weight:800}
+.sources{font-size:12px;color:var(--muted)}
+.sources a{color:var(--blue);text-decoration:none}
+@media(max-width:720px){.fun{flex-direction:column}.beam{width:240px}.panL{left:calc(50% - 230px)}.panR{left:calc(50% + 120px)}}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#fff;font-weight:800;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">4️⃣ Analytics + SR</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+<div class="wrap">
+
+<div class="hero">
+  <span class="badge">📊 Course 2 of 4 · Reading Experiment Results Like a Pro · ~25–30 min</span>
+  <h1>Read the Scorecard Without Being Fooled 🕵️</h1>
+  <p>Your experiment finished. The scorecard is in. This course teaches you which numbers to trust, which gotchas bite, and how to make a defensible ship / no-ship call — with animations for the concepts that words butcher, and an Amplitude decoder for every scary term.</p>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-p="u1">🧾 Scorecard</button>
+  <button class="tab" data-p="u2">🕺 Participation</button>
+  <button class="tab" data-p="u3">📈 Lift & Impact</button>
+  <button class="tab" data-p="u4">🩺 Diagnostics</button>
+  <button class="tab" data-p="u5">⚖️ The Call</button>
+  <button class="tab" data-p="u6">🔤 Decoder</button>
+  <button class="tab" data-p="u7">🎯 Quiz</button>
+</div>
+
+<!-- ============ U1 SCORECARD ============ -->
+<div class="panel show" id="u1">
+  <div class="card">
+    <h2>🧾 Unit 1 · Reading the Pulse Scorecard</h2>
+    <p class="sub">Most people read the lift column and stop. The full scorecard has more signal — and several ways to misread it. Take the guided tour 👇</p>
+
+    <div class="sc"><table id="sctable">
+      <tr><th>Metric</th><th data-c="1">Tier</th><th data-c="2">Lift</th><th data-c="3">95% CI</th><th data-c="4">p-value</th></tr>
+      <tr><td>Sign-up rate</td><td data-c="1">🥇 Primary</td><td data-c="2" class="good">+3.0%</td><td data-c="3">[+0.5%, +5.5%]</td><td data-c="4">0.02</td></tr>
+      <tr><td>Time to sign-up</td><td data-c="1">🔍 Secondary</td><td data-c="2" class="good">−8.1%</td><td data-c="3">[−12.0%, −4.2%]</td><td data-c="4">0.001</td></tr>
+      <tr><td>Error rate</td><td data-c="1">🚧 Guardrail</td><td data-c="2" class="bad">+2.0%</td><td data-c="3">[+0.1%, +3.9%]</td><td data-c="4">0.04</td></tr>
+      <tr><td>7-day retention</td><td data-c="1">🚧 Guardrail</td><td data-c="2" class="mid">+0.4%</td><td data-c="3">[−1.1%, +1.9%]</td><td data-c="4">0.60</td></tr>
+    </table></div>
+    <div class="tourbox" id="tourbox">👋 Press <b>Start tour</b> and I'll walk you through each column of this real-shaped scorecard — including the trap hiding in row 3.</div>
+    <div class="tourbtns">
+      <button class="play" id="tourbtn" onclick="tourNext()">▶ Start tour</button>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>The scorecard is your <b>report card</b> 📋. <b>Lift</b> = how much better the new thing did. <b>CI</b> = the teacher saying "your real grade is somewhere between B− and A+". <b>p-value</b> = how likely you'd see this grade by pure luck if you learned nothing. Small p = probably not luck.</p>
+    </div>
+
+    <h3>Statistical vs practical significance</h3>
+    <p><b>Statistically significant</b> (CI excludes zero) = the effect is real. <b>Practically significant</b> = the effect is big enough to <i>matter</i>. A real-but-tiny +0.1% lift may not be worth the engineering cost. You need both to ship happily. ✌️</p>
+
+    <div class="flips">
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">⚠️ Trap</span><p>"p = 0.10, so the feature had <b>no effect</b>. Kill it."</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>p &gt; 0.05 means <b>"not enough data to confirm"</b> — not "the effect is zero." A +12% lift with CI [−3%, +27%] is an <b>underpowered</b> result, not a null one. It needs more time or traffic.</p><span class="hint">tap to flip back</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="amp"><span class="tag">🅰️ Amplitude bridge</span>
+      <p>Statsig <b>Pulse / Scorecard</b> ≈ Amplitude Experiment's <b>Results</b> view (close match 🟢). Both show lift, CI, p-value. Statsig extra: explicit <b>CUPED applied / Delta method / Sequential testing</b> badges on each metric row — worth learning to spot.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ U2 PARTICIPATION ============ -->
+<div class="panel" id="u2">
+  <div class="card">
+    <h2>🕺 Unit 2 · Participation Logic (the #1 gotcha)</h2>
+    <p class="sub">The single most misunderstood concept in Statsig — and the #1 source of support tickets. Watch it happen:</p>
+
+    <div class="stage">
+      <div class="cap">💌 20 users get <b>assigned</b> (exposed) … how many <b>participate</b>?</div>
+      <div class="fun">
+        <div class="fzone" style="border-color:#4A5DC7">
+          <h5>ASSIGNED (Diagnostics "exposures")</h5>
+          <div class="cnt" id="acnt">0</div>
+          <div class="dots" id="adots"></div>
+        </div>
+        <div class="fzone" style="border-color:#00A86B">
+          <h5>PARTICIPATED (fired the metric event AFTER exposure)</h5>
+          <div class="cnt" id="pcnt">0</div>
+          <div class="dots" id="pdots"></div>
+        </div>
+      </div>
+      <button class="play" onclick="runFunnel()">▶ Play animation</button>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>You invited 20 kids to your party 💌 (assigned). Only 3 actually came and danced 🕺 (participated). The party isn't broken — most invited kids just didn't come. If your metric is "checkout completed", most users simply never check out. <b>Participation = assignments × how often the event fires.</b></p>
+    </div>
+
+    <div class="keyline">🧮 Real numbers from the course: 140,000 exposures, 2,100 purchase participants = 1.5% purchase rate. Totally normal for e-commerce. Only <b>participants</b> count toward the metric math.</div>
+
+    <h3>⏳ Bake windows — yesterday's data is still cooking</h3>
+    <p>The last 24–48 hours of any metric chart look artificially flat because events are still being processed. "The metric dropped to zero this morning!" 😱 → 🎂 it's still baking. Report only on <b>baked</b> data.</p>
+
+    <div class="amp"><span class="tag">🅰️ Amplitude bridge</span>
+      <p>Statsig <b>Diagnostics "exposures"</b> ≈ Amplitude Experiment's <b>"assignment"</b>. Statsig <b>participation</b> has no exact Amplitude twin — closest idea is users with the metric event post-exposure ("metric exposure" in some contexts). The <b>bake window</b> concept maps 1:1. 🟢</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ U3 LIFT & IMPACT ============ -->
+<div class="panel" id="u3">
+  <div class="card">
+    <h2>📈 Unit 3 · Reading Lift Correctly</h2>
+    <p class="sub">Two different "lifts" answer two different questions — and the Impact tab is the one people over-quote.</p>
+
+    <div class="stage">
+      <div class="cap">🔭 Experiment at 5% rollout: what the Impact tab actually shows</div>
+      <div class="imp">
+        <div class="impcol"><div class="impval" id="obsval">~600 conversions</div><div class="impbar obs" id="obsbar"></div><div class="implbl"><b>Observed</b> so far<br>(real users, 5% rollout)</div></div>
+        <div class="impcol"><div class="impval" id="projval">12,000 conversions</div><div class="impbar proj" id="projbar"></div><div class="implbl"><b>Impact tab</b><br>(projected at 100% rollout — an extrapolation!)</div></div>
+      </div>
+      <button class="play" onclick="runImpact()">▶ Play animation</button>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>You sold lemonade on <b>one street corner</b> 🍋 and made $6. The Impact tab says "if you set up on every corner in town, you'd make $120!" Maybe — but you haven't <i>earned</i> $120. It's a forecast, not a receipt. 🧾</p>
+    </div>
+
+    <div class="keyline">🗣️ Safe sentence: "The Impact tab <i>projects</i> 50K subscriptions if we ship to 100%." Unsafe sentence: "Our experiment <i>proved</i> we can add 50K." Extrapolation ≠ proof.</div>
+
+    <div class="flips">
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">⚠️ Trap</span><p>Pulse shows <b>"infinite relative delta"</b> on a ratio metric. Panic? ♾️</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>The ratio's <b>denominator CI crosses zero</b>, so the ratio's CI is mathematically infinite. Display edge case, not a data error. Read the <b>absolute per-user metric</b> instead.</p><span class="hint">tap to flip back</span></div>
+        </div>
+      </div>
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">⚠️ Trap</span><p>"The Pulse UI count doesn't match my warehouse query — data loss?!"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>The UI uses <b>HLL++ sketches</b> — a fast approximation (~0.2–0.3% error) for count-distinct. Warehouse queries are exact. A small gap is expected; big gaps usually come from <b>timing windows</b>, not the approximation.</p><span class="hint">tap to flip back</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="amp"><span class="tag">🅰️ Amplitude bridge</span>
+      <p><b>Per-variant lift</b> maps directly to Amplitude Experiment's lift. The <b>Impact tab</b> (projected launch impact at 100%) is a Statsig-flavored surface — treat it like any launch-impact projection: valid math, extrapolated confidence. Ratio-metric quirks (delta method, denominators) exist on both platforms.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ U4 DIAGNOSTICS ============ -->
+<div class="panel" id="u4">
+  <div class="card">
+    <h2>🩺 Unit 4 · Diagnosing Problems</h2>
+    <p class="sub">Not every anomaly is a bad result — some are bugs. Diagnostics first, scorecard second.</p>
+
+    <h3>⚖️ SRM — watch the split go wrong</h3>
+    <div class="stage">
+      <div class="cap">You configured 50/50. Users start flowing in…</div>
+      <div class="scale">
+        <div class="post"></div>
+        <div class="beam" id="beam"></div>
+        <div class="pan panL" id="panL"><div class="tray" id="trayL">0</div><div class="plbl">Control</div></div>
+        <div class="pan panR" id="panR"><div class="tray" id="trayR">0</div><div class="plbl">Treatment</div></div>
+        <div class="srmflag" id="srmflag">🚨 SRM DETECTED — allocation compromised</div>
+      </div>
+      <button class="play" onclick="runSRM()">▶ Play animation</button>
+    </div>
+    <p>A 46/54 split "close enough"? No — if the chi-squared test says this imbalance has &lt;0.01% chance of being random, something <b>systematic</b> is wrong: crash-before-exposure bugs, bot traffic, conditional logging, truncated logs. <b>More data makes it worse</b>, not better — you're adding more biased data. Diagnostic: check the <b>SRM p-value time series</b> (noisy = maybe false alarm; trending to 0 = real bug), use the SRM Debugger, fix, restart.</p>
+
+    <h3>🐋 Whales & wide CIs — why your CI won't shrink</h3>
+    <div class="stage">
+      <div class="cap">Most users spend a little… one whale spends a LOT. Watch the average jump.</div>
+      <div class="pond" id="pond">
+        <div class="avgline" id="avgline" style="top:75%"></div>
+        <div class="avglbl" id="avglbl" style="top:71%">avg 💰</div>
+      </div>
+      <button class="play" onclick="runWhale()">▶ Play animation</button>
+    </div>
+    <p>Heavy-tailed metrics (marketplaces, freemium revenue) have huge variance → wide CIs even with a perfect split and no SRM. It <i>looks</i> like the platform is broken; it's just statistics. Fixes: check whether <b>CUPED applied</b> shows on the metric row (variance already cut ~30–50%), run longer, get more traffic, or switch to a higher-frequency proxy metric.</p>
+
+    <h3>⏱️ Watch a CI narrow with more data</h3>
+    <div class="stage">
+      <div class="cap">Same true effect (+2.5%). More days → tighter interval → readable direction.</div>
+      <div class="citrack">
+        <div class="cizero"></div>
+        <div class="cibar" id="cibar" style="left:18%;width:60%"></div>
+        <div class="cidot2" id="cidot" style="left:47%"></div>
+      </div>
+      <div class="daylbl" id="daylbl">Day 2 — CI [−6.4%, +11.4%] · crosses zero → can't call it 🤷</div>
+      <button class="play" onclick="runCI()">▶ Play animation</button>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>Guessing how many candies are in a jar 🍬: after 2 peeks your guess is "somewhere between 50 and 500" (useless). After 100 peeks it's "between 180 and 220" (useful!). p &gt; 0.05 doesn't mean "no candy" — it means <b>you haven't looked enough yet</b>.</p>
+    </div>
+
+    <div class="amp"><span class="tag">🅰️ Amplitude bridge</span>
+      <p>Amplitude Experiment has the same <b>SRM warning</b> and a Diagnostics view — the concept maps 1:1 🟢. Statsig adds the <b>SRM Debugger</b> with common root-cause patterns. CUPED exists on both; Statsig badges it visibly per metric row (Amplitude's variance reduction is more behind-the-scenes 🟡).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ U5 THE CALL ============ -->
+<div class="panel" id="u5">
+  <div class="card">
+    <h2>⚖️ Unit 5 · Making the Call</h2>
+    <p class="sub">Scorecard clean, no SRM, participation sane. Now: ship, keep running, or kill? Practice on 3 scenarios — no stakes.</p>
+
+    <div class="keyline">🧭 The synthesis routine: start with the <b>primary</b> → check <b>secondaries</b> are consistent → walk <b>every guardrail</b>. Clear primary win + all guardrails within tolerance = ship. Statistically real guardrail regression = investigate first. Primary CI crossing zero + time left = keep running.</div>
+
+    <div class="sim" data-a="1">
+      <div class="scen">📋 <b>Scenario 1:</b> Primary +3.0% CI [+0.5%, +5.5%] ✅ · Error-rate guardrail +2.0% CI [+0.1%, +3.9%] ⚠️ · Both p &lt; 0.05. PM says "primary is clearly positive, ship it."</div>
+      <div class="simbtns">
+        <button class="simbtn" data-i="0">🚀 Ship it</button>
+        <button class="simbtn" data-i="1">🔍 Investigate the errors first</button>
+        <button class="simbtn" data-i="2">⏳ Keep running for more data</button>
+      </div>
+      <div class="simfb">🎯 <b>Investigate first.</b> Both CIs exclude zero — the guardrail regression is as statistically real as the win. Three defensible paths: ship-and-fix (cause known & benign), ship-and-instrument, or hold. "Ship because primary is stronger" is not one of them.</div>
+    </div>
+
+    <div class="sim" data-a="2">
+      <div class="scen">📋 <b>Scenario 2:</b> Primary +12% CI [−3%, +27%], p=0.10. Ran 6 of 14 planned days. Manager: "not significant — kill it."</div>
+      <div class="simbtns">
+        <button class="simbtn" data-i="0">🗑️ Kill it — no effect</button>
+        <button class="simbtn" data-i="1">🚀 Ship it — +12% is huge</button>
+        <button class="simbtn" data-i="2">⏳ Keep running — it's underpowered, not null</button>
+      </div>
+      <div class="simfb">🎯 <b>Keep running.</b> p &gt; 0.05 means "not enough data to confirm", not "effect is zero." The point estimate is large and the planned duration isn't done. Let it mature to the pre-committed horizon, then call it.</div>
+    </div>
+
+    <div class="sim" data-a="3">
+      <div class="scen">📋 <b>Scenario 3:</b> Primary +2.1% CI [+0.8%, +3.4%] ✅ · all guardrails flat, CIs hugging zero · ran full planned duration · secondaries consistent.</div>
+      <div class="simbtns">
+        <button class="simbtn" data-i="0">🚀 Ship it</button>
+        <button class="simbtn" data-i="1">⏳ Run 2 more weeks to be extra sure</button>
+        <button class="simbtn" data-i="2">🔍 Re-run the experiment to confirm</button>
+      </div>
+      <div class="simfb">🎯 <b>Ship.</b> This is the clean case: real primary win, consistent secondaries, guardrails quiet, full duration honored. Endless re-running has a cost too (opportunity cost + multiple-testing risk). Make the call. 🎉</div>
+    </div>
+
+    <div class="amp"><span class="tag">🅰️ Amplitude bridge</span>
+      <p>The decision framework is <b>identical</b> in Amplitude Experiment — primary/secondary/guardrail tiers and the same ship logic. The statistics don't care whose logo is on the scorecard. 🟢</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ U6 DECODER ============ -->
+<div class="panel" id="u6">
+  <div class="card">
+    <h2>🔤 Statsig → Amplitude Decoder</h2>
+    <p class="sub">Every term that made you go "huh?" — ELI6 + the Amplitude equivalent. 🟢 close match · 🟡 partial · 🔴 no equivalent. Type to filter:</p>
+    <input class="search" id="dsearch" placeholder="🔎 Try: pulse, gate, CUPED, layer, exposure…">
+    <table id="dtable">
+      <tr><th>Statsig term</th><th>ELI6 🧒</th><th>Amplitude equivalent</th><th>Match</th></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ============ U7 QUIZ ============ -->
+<div class="panel" id="u7">
+  <div class="card" style="margin-bottom:14px">
+    <h2>🎯 Cumulative Quiz</h2>
+    <p class="sub">5 scenarios across all units. 80% is the bar. 💪</p>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="scorecard"><div class="big" id="scoretext"></div><p id="scoremsg" style="margin-top:6px;color:#C9D6FF"></p></div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">📚 Sources</h3>
+  <p class="sources">Grounded in the validated <b>Reading Experiment Results Like a Pro</b> course + Statsig↔Amplitude feature inventory (LXD corpus) ·
+  <a href="https://docs.statsig.com/experiments/interpreting-results/read-results">Reading Pulse results</a> ·
+  <a href="https://docs.statsig.com/experiments/monitoring/srm">Managing SRM</a> ·
+  <a href="https://docs.statsig.com/metrics/pulse">Pulse metrics</a> ·
+  <a href="https://docs.google.com/document/d/1dCHZ9ooR3oXhykRqURVv1g9lpwBWmNoigbeZKGbmN0Y/edit?tab=t.0">Jon Shek's Statsig→Amplitude concept map</a></p>
+</div>
+
+</div>
+
+<script>
+// tabs
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('show')});
+    t.classList.add('active');document.getElementById(t.dataset.p).classList.add('show');
+  });
+});
+
+// ---- scorecard tour ----
+var tourSteps=[
+ {c:1,t:"🥇🔍🚧 <b>Tier</b> — only the PRIMARY gets the statistical test that drives the ship decision. Secondaries explain it; guardrails protect everything else."},
+ {c:2,t:"📈 <b>Lift</b> — the % difference between treatment and control. The headline number… and the least trustworthy on its own."},
+ {c:3,t:"📏 <b>95% CI</b> — the range where the true effect likely lives. Rule: if it crosses zero, don't trust the direction. Row 4's retention CI [−1.1%, +1.9%] crosses zero → quiet guardrail, fine."},
+ {c:4,t:"🎲 <b>p-value</b> — chance of seeing this result if nothing actually changed. Small = probably real. But note row 3: the ERROR RATE is also significant (p=0.04)…"},
+ {c:0,t:"🚨 <b>The trap in this scorecard:</b> primary win (+3.0% ✅) AND a statistically real guardrail regression (error rate +2.0%, CI excludes zero). \"Ship because the primary is strong\" would be wrong — investigate the errors first. That's the Unit 5 skill."}
+];
+var ti=-1;
+function tourNext(){
+  ti++;
+  document.querySelectorAll('#sctable .hl').forEach(function(x){x.classList.remove('hl')});
+  if(ti>=tourSteps.length){ti=-1;document.getElementById('tourbox').innerHTML="🔁 Tour complete. Press again to replay.";document.getElementById('tourbtn').textContent="▶ Restart tour";return;}
+  var s=tourSteps[ti];
+  if(s.c>0)document.querySelectorAll('#sctable [data-c="'+s.c+'"]').forEach(function(x){x.classList.add('hl')});
+  else document.querySelectorAll('#sctable tr:nth-child(4) td').forEach(function(x){x.classList.add('hl')});
+  document.getElementById('tourbox').innerHTML=s.t;
+  document.getElementById('tourbtn').textContent=ti===tourSteps.length-1?"✅ Finish":"Next ➜";
+}
+
+// ---- participation funnel ----
+function runFunnel(){
+  var a=document.getElementById('adots'),p=document.getElementById('pdots');
+  a.innerHTML='';p.innerHTML='';
+  var ac=document.getElementById('acnt'),pc=document.getElementById('pcnt');
+  ac.textContent='0';pc.textContent='0';
+  var participants=[3,8,14];
+  for(var i=0;i<20;i++){
+    (function(i){
+      setTimeout(function(){
+        var d=document.createElement('div');d.className='dot in';a.appendChild(d);
+        ac.textContent=(i+1);
+        if(participants.indexOf(i)>-1){
+          setTimeout(function(){
+            d.classList.add('ghost');
+            var g=document.createElement('div');g.className='dot in part';p.appendChild(g);
+            pc.textContent=p.children.length;
+          },500);
+        }
+      },i*160);
+    })(i);
+  }
+  setTimeout(function(){
+    ac.textContent='20 assigned';pc.textContent=p.children.length+' participated (15%)';
+  },20*160+800);
+}
+
+// ---- impact extrapolation ----
+function runImpact(){
+  var o=document.getElementById('obsbar'),pr=document.getElementById('projbar');
+  o.style.height='0';pr.style.height='0';
+  document.getElementById('obsval').style.opacity=0;document.getElementById('projval').style.opacity=0;
+  setTimeout(function(){o.style.height='9px';document.getElementById('obsval').style.opacity=1;},200);
+  setTimeout(function(){pr.style.height='150px';document.getElementById('projval').style.opacity=1;},1400);
+}
+
+// ---- SRM scale ----
+function runSRM(){
+  var L=0,R=0,tl=document.getElementById('trayL'),tr=document.getElementById('trayR');
+  var beam=document.getElementById('beam'),flag=document.getElementById('srmflag');
+  var panL=document.getElementById('panL'),panR=document.getElementById('panR');
+  flag.classList.remove('on');beam.style.transform='translateX(-50%) rotate(0deg)';
+  panL.style.transform='translateY(0)';panR.style.transform='translateY(0)';
+  tl.textContent='0';tr.textContent='0';
+  var steps=[[500,500],[2400,2600],[4600,5400],[6900,8100],[9200,10800]];
+  steps.forEach(function(s,i){
+    setTimeout(function(){
+      tl.textContent=s[0].toLocaleString();tr.textContent=s[1].toLocaleString();
+      var tilt=Math.min((s[1]-s[0])/s[1]*40,7);
+      beam.style.transform='translateX(-50%) rotate('+tilt+'deg)';
+      panL.style.transform='translateY(-'+(tilt*2.4)+'px)';
+      panR.style.transform='translateY('+(tilt*2.4)+'px)';
+      if(i===steps.length-1)flag.classList.add('on');
+    },(i+1)*900);
+  });
+}
+
+// ---- whale ----
+function runWhale(){
+  var pond=document.getElementById('pond');
+  pond.querySelectorAll('.fish').forEach(function(f){f.remove()});
+  var avg=document.getElementById('avgline'),lbl=document.getElementById('avglbl');
+  avg.style.top='78%';lbl.style.top='74%';
+  for(var i=0;i<14;i++){
+    (function(i){setTimeout(function(){
+      var f=document.createElement('div');f.className='fish';f.textContent='🐟';
+      f.style.left=(5+Math.random()*70)+'%';f.style.top=(55+Math.random()*35)+'%';
+      pond.appendChild(f);
+    },i*130);})(i);
+  }
+  setTimeout(function(){
+    var w=document.createElement('div');w.className='fish whale';w.textContent='🐋';
+    w.style.left='76%';w.style.top='8%';pond.appendChild(w);
+    avg.style.top='42%';lbl.style.top='38%';
+  },14*130+500);
+}
+
+// ---- CI narrowing ----
+var ciSteps=[
+ {l:18,w:60,d:"Day 2 — CI [−6.4%, +11.4%] · crosses zero → can't call it 🤷",col:"#F5A623"},
+ {l:30,w:40,d:"Day 6 — CI [−1.5%, +6.5%] · still crosses zero → keep running ⏳",col:"#F5A623"},
+ {l:42,w:24,d:"Day 10 — CI [+0.2%, +4.9%] · just excludes zero → getting real 👀",col:"#8CC63F"},
+ {l:47,w:15,d:"Day 14 (planned end) — CI [+1.1%, +3.9%] · clean win at full duration ✅",col:"#00A86B"}
+];
+function runCI(){
+  var bar=document.getElementById('cibar'),dot=document.getElementById('cidot'),lbl=document.getElementById('daylbl');
+  ciSteps.forEach(function(s,i){
+    setTimeout(function(){
+      bar.style.left=s.l+'%';bar.style.width=s.w+'%';bar.style.background=s.col;
+      dot.style.left=(s.l+s.w/2-1)+'%';lbl.textContent=s.d;
+    },i*1600);
+  });
+}
+
+// ---- decision sims ----
+var simAns={1:1,2:2,3:0};
+document.querySelectorAll('.sim').forEach(function(s){
+  s.querySelectorAll('.simbtn').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(s.classList.contains('done'))return;
+      s.classList.add('done');
+      var right=simAns[s.dataset.a];
+      s.querySelectorAll('.simbtn').forEach(function(x){
+        if(+x.dataset.i===right)x.classList.add('right');
+        else if(x===b)x.classList.add('wrongpick');
+      });
+    });
+  });
+});
+
+// ---- decoder ----
+var TERMS=[
+["Pulse / Scorecard","Your experiment's report card 📋","Experiment Results view in Amplitude Experiment","close"],
+["Feature Gate","Bouncer at the door — on/off per user 🕴️","Amplitude Experiment flags (Statsig auto-promotes gates to A/B analysis)","partial"],
+["Dynamic Config","Control panel of tunable values (JSON) 🎛️","Amplitude Experiment payloads","partial"],
+["Experiment","Blind taste test with a coin flip 🧪","Amplitude Experiment","close"],
+["Exposure (Diagnostics)","Kid got a party invitation 💌 = assigned to an arm","\"Assignment\" in Amplitude Experiment","close"],
+["Participation","Kid showed up AND danced 🕺 = fired the metric event post-exposure","No direct twin — closest: users with metric event post-exposure","none"],
+["Lift","How much better the new thing did 📈","Lift (same)","close"],
+["Confidence Interval (CI)","\"Your real grade is between B− and A+\" 📏","Confidence interval (same)","close"],
+["p-value","Odds you'd see this by pure luck 🎲","p-value (same)","close"],
+["Primary / Secondary / Guardrail","Your bet 🥇 / the replay cam 🔍 / grandma's vase 🚧","Same metric tiers in Amplitude Experiment","close"],
+["Bake window","The cake is still baking — don't judge it yet 🎂","Same concept; data processing delay","close"],
+["SRM (Sample Ratio Mismatch)","The scale is tipped — someone's cheating ⚖️","SRM warning in Amplitude Experiment (Statsig adds SRM Debugger)","close"],
+["CUPED","Noise-cancelling headphones for your metric 🎧 (uses pre-experiment behavior)","Variance reduction in Amplitude Experiment (less visibly badged)","partial"],
+["Sequential testing","A speedometer that's honest even when you keep glancing 👀","Similar always-valid approaches; Statsig shows expanded CI \"wings\"","partial"],
+["Impact tab","\"If you sold lemonade on EVERY corner…\" 🍋 projection at 100%","Closest: launch impact estimates; treat as extrapolation","partial"],
+["Infinite relative delta ♾️","Divide-by-wobbly-zero — display quirk on ratio metrics","No named equivalent; same math issue exists","none"],
+["HLL++ counts","Super-fast head-count that's ~99.8% right 🧮","Amplitude UI also uses approximation for some counts","partial"],
+["Layers","Separate lanes so experiments don't crash into each other 🏊","Shared layers / mutual exclusion in Amplitude Experiment","close"],
+["Holdout","A group kept in the 'old world' to measure total program impact 🏝️","Holdout cohorts in Amplitude Experiment","close"],
+["Autotune (bandits)","A robot that shifts traffic to the winning slot machine 🎰","No direct Amplitude equivalent","none"],
+["Stable ID","Wristband for guests with no name tag 🎗️ (device-level, local storage)","Amplitude device ID (similar role)","close"],
+["User ID","Name tag for logged-in users 🏷️","Amplitude user ID","close"],
+["Overrides","VIP list — force specific users in/out 📝","User overrides in Amplitude Experiment","close"],
+["Targeting rules","The bouncer's checklist 📋 (country, platform, segment…)","Cohorts + Experiment audience targeting","close"],
+["Warehouse Native (WHN)","Statsig does its math INSIDE your warehouse 🏠","Amplitude Experiment warehouse mode","close"],
+["Metric Catalog","One official dictionary of metric definitions 📖","Event taxonomy + custom metrics (stream-side)","partial"],
+["Org / Project / Team","Building / floor / your desk pod 🏢","Org / Workspace / Project (⚠️ Statsig 'Team' ≈ Amplitude naming differs)","close"],
+["Topline Alerts","Smoke alarm for your key metrics 🚨","Anomaly detection in Amplitude Analytics","partial"],
+["Aggregated Impact","Adding up wins across ALL experiments this quarter 🧾","No direct Amplitude equivalent","none"],
+["Differential Impact (DID)","\"This worked great for iOS but hurt Android\" auto-detector 🔬","Manual heterogeneous-effect analysis in Amplitude","partial"]
+];
+var dt=document.getElementById('dtable');
+function renderTerms(f){
+  dt.querySelectorAll('tr:not(:first-child)').forEach(function(r){r.remove()});
+  TERMS.filter(function(t){return !f||t.join(' ').toLowerCase().indexOf(f)>-1}).forEach(function(t){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><b>'+t[0]+'</b></td><td>'+t[1]+'</td><td>'+t[2]+'</td><td><span class="mq '+t[3]+'">'+(t[3]==='close'?'🟢 close':t[3]==='partial'?'🟡 partial':'🔴 none')+'</span></td>';
+    dt.appendChild(tr);
+  });
+}
+renderTerms('');
+document.getElementById('dsearch').addEventListener('input',function(e){renderTerms(e.target.value.toLowerCase())});
+
+// ---- quiz ----
+var QS=[
+ {q:"Primary +3.0% (CI [+0.5%,+5.5%], p=0.02) ✅. Error-rate guardrail +2.0% (CI [+0.1%,+3.9%], p=0.04). PM: \"primary CI is strong — ship.\" Your recommendation?",
+  opts:["Ship — the primary is stronger than the guardrail","Don't ship yet or ship with a plan: the guardrail regression's CI excludes zero, so the error increase is statistically real. Identify whether errors are benign first.","Run longer to get a bigger sample before deciding"],
+  c:1,e:"🎯 Both signals are real. Three defensible paths: ship-and-fix, ship-and-instrument, or hold — 'primary is stronger' isn't one."},
+ {q:"5-day experiment: 2,100 participants on 'purchase completed', 140,000 exposures. PM: \"only 2,100 of 140,000 saw the experiment — terrible!\" Correct?",
+  opts:["Yes — with so few viewers the results are unreliable","It's SRM — that ratio signals a sampling imbalance","No — 140K were ASSIGNED; 2,100 fired the purchase event post-exposure. A ~1.5% purchase rate is normal. Participation counts metric-firers, not viewers."],
+  c:2,e:"💌→🕺 Assignment ≠ participation. To raise participation: pick a higher-frequency primary metric, or run longer."},
+ {q:"Experiment at 10% rollout. Impact tab: +50,000 subscriptions. PM wants to announce \"we proved we can add 50K subscribers.\" Problem?",
+  opts:["None — the Impact tab is a valid projection, 50K is correct","The Impact tab projects to 100% rollout — it's an extrapolation from a 10% sample. 'Projects 50K if shipped to 100%' is accurate; 'proved 50K' overstates certainty.","The experiment must reach 50% rollout before the Impact tab can be trusted"],
+  c:1,e:"🍋 Forecast, not receipt. Directional lift is proven at 10%; the 100% number carries extrapolation uncertainty."},
+ {q:"SRM warning: configured 50/50, seeing 46/54. Colleague: \"only 4 points off — close enough, use the results.\" Response?",
+  opts:["Agree — SRM warnings are overly sensitive","Run longer — more data will balance it out","SRM of any magnitude invalidates the statistical guarantees: a split this skewed has p<0.001 of being random, so something systematic is biasing assignment. Stop, debug, fix, restart."],
+  c:2,e:"⚖️ It's a mechanism failure, not noise. More data = more biased data. SRM Debugger → root cause → clean restart."},
+ {q:"Primary +12%, CI [−3%,+27%], p=0.10, at day 6 of a planned 14. What is this result?",
+  opts:["A null result — the feature has no effect","An underpowered result — the point estimate is large but there isn't enough data to confirm. Keep running to the planned horizon.","A win — +12% is clearly practically significant"],
+  c:1,e:"🍬 p>0.05 = 'haven't looked enough yet', not 'no candy in the jar'. Honor the pre-committed duration, then call it."}
+];
+var quizEl=document.getElementById('quiz'),answered={},correct=0;
+QS.forEach(function(item,i){
+  var d=document.createElement('div');d.className='q';
+  var h='<div class="qn">Question '+(i+1)+' of '+QS.length+'</div><h4>'+item.q+'</h4>';
+  item.opts.forEach(function(o,j){h+='<button class="opt" data-i="'+i+'" data-j="'+j+'">'+String.fromCharCode(65+j)+'. '+o+'</button>'});
+  h+='<div class="expl">'+item.e+'</div>';
+  d.innerHTML=h;quizEl.appendChild(d);
+});
+quizEl.addEventListener('click',function(ev){
+  var b=ev.target.closest('.opt');if(!b)return;
+  var i=+b.dataset.i,j=+b.dataset.j;
+  if(answered[i]!==undefined)return;
+  answered[i]=j;
+  var q=b.closest('.q');q.classList.add('answered');
+  q.querySelectorAll('.opt').forEach(function(o){
+    o.disabled=true;
+    if(+o.dataset.j===QS[i].c)o.classList.add('correct');
+    else if(+o.dataset.j===j)o.classList.add('wrong');
+  });
+  if(j===QS[i].c)correct++;
+  if(Object.keys(answered).length===QS.length){
+    var sc=document.getElementById('scorecard');sc.classList.add('show');
+    document.getElementById('scoretext').textContent=correct+' / '+QS.length+(correct===QS.length?' 🏆':correct>=4?' 🎉':' 💪');
+    document.getElementById('scoremsg').textContent=correct>=4?'Passed the 80% bar. Statistical significance is necessary but not sufficient — and you know it.':'Below 80% — replay the animations for the ones you missed, then ask me to quiz you live.';
+    sc.scrollIntoView({behavior:'smooth'});
+  }
+});
+</script>
+</body>
+</html>

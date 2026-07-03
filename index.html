@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statsig Enablement Hub · Learn Statsig Interactively</title>
+<style>
+:root { color-scheme: light;
+  --blue:#0052F2; --darkblue:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+  --pink:#FF7D78; --red:#F23845; --ink:#0b1220; --muted:#5b6478;
+  --bg:#f7f8fc; --card:#ffffff; --line:#e5e9f4; --green:#0eaa5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gellix','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:1020px;margin:0 auto;padding:26px 20px 80px}
+.hero{background:linear-gradient(135deg,var(--darkblue) 0%,#0a2f7a 55%,var(--blue) 100%);border-radius:24px;padding:48px 40px;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-80px;top:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(163,115,255,.5),transparent 70%)}
+.hero::after{content:"";position:absolute;left:-60px;bottom:-100px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,125,120,.35),transparent 70%)}
+.hero h1{font-size:2.1rem;font-weight:800;letter-spacing:-.02em;position:relative;z-index:1}
+.hero p{opacity:.88;margin-top:12px;max-width:680px;font-size:1rem;position:relative;z-index:1}
+.badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 14px;font-size:.75rem;font-weight:700;margin-bottom:16px;position:relative;z-index:1}
+.path{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;position:relative;z-index:1;font-size:.8rem;font-weight:700}
+.path span{background:rgba(255,255,255,.12);border-radius:8px;padding:6px 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin-top:26px}
+.course{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:24px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:10px;transition:.25s;position:relative;overflow:hidden}
+.course:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(0,26,79,.14);border-color:var(--lilac)}
+.course .num{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--lilac)}
+.course h3{font-size:1.12rem;font-weight:800;color:var(--darkblue)}
+.course p{font-size:.85rem;color:var(--muted)}
+.course .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.tagx{font-size:.68rem;font-weight:800;border-radius:999px;padding:3px 10px}
+.tagx.time{background:#eef4ff;color:var(--blue)}
+.tagx.fmt{background:#f2f0ff;color:var(--violet)}
+.course .go{position:absolute;right:18px;bottom:14px;font-weight:800;color:var(--blue);font-size:1.1rem;transition:.2s}
+.course:hover .go{transform:translateX(4px)}
+.course.map{background:linear-gradient(135deg,#f6f2ff,#eef4ff)}
+h2.sect{font-size:1.05rem;font-weight:800;color:var(--darkblue);margin:34px 0 4px}
+.note{background:#fff7ea;border:1px solid #ffe1b0;border-radius:12px;padding:14px 16px;font-size:.85rem;margin-top:26px}
+.footer{font-size:.78rem;color:var(--muted);margin-top:30px;border-top:1px solid var(--line);padding-top:16px;text-align:center}
+.footer a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <span class="badge">📈 Amplitude · Internal Enablement · Built with Claude</span>
+    <h1>🧭 Statsig Enablement Hub</h1>
+    <p>The full Learn Statsig track as interactive, animated courses — simulators for the statistical concepts, ELI6 explanations for everything, and Amplitude equivalents throughout. Click, drag, and quiz your way to product fluency.</p>
+    <div class="path">
+      <span>1️⃣ Statsig 101</span><span>→</span><span>2️⃣ Reading Results</span><span>→</span><span>3️⃣ Feature Gates</span><span>→</span><span>4️⃣ Analytics + SR</span><span>→</span><span>🗺️ Concept Map (reference)</span>
+    </div>
+  </div>
+
+  <h2 class="sect">📚 The Courses</h2>
+  <div class="grid">
+    <a class="course" href="statsig-101.html">
+      <span class="num">Course 1 · Foundational</span>
+      <h3>🎓 Statsig 101 — Visual Learner Edition</h3>
+      <p>The build-ship-measure-learn loop, feature gates vs experiments, reading Pulse, and the five day-1 gotchas — all visual.</p>
+      <div class="meta"><span class="tagx time">⏱ 25–30 min</span><span class="tagx fmt">🎮 Interactive</span></div>
+      <span class="go">→</span>
+    </a>
+    <a class="course" href="reading-results.html">
+      <span class="num">Course 2 · Statistics</span>
+      <h3>📊 Reading Experiment Results Like a Pro</h3>
+      <p>Scorecard columns, participation logic, lift interpretation, SRM, and ship/no-ship decisions — animated stats, no scary math.</p>
+      <div class="meta"><span class="tagx time">⏱ 25–30 min</span><span class="tagx fmt">🎬 Animated</span></div>
+      <span class="go">→</span>
+    </a>
+    <a class="course" href="feature-gates.html">
+      <span class="num">Course 3 · Deep Dive</span>
+      <h3>🚪 Feature Gates Deep Dive</h3>
+      <p>Rule fall-through, targeting vs rollout %, per-rule metrics, exposure logs at the extremes, overrides, and safe archiving.</p>
+      <div class="meta"><span class="tagx time">⏱ 20–25 min</span><span class="tagx fmt">🎮 Simulators</span></div>
+      <span class="go">→</span>
+    </a>
+    <a class="course" href="analytics-session-replay.html">
+      <span class="num">Course 4 · Deep Dive</span>
+      <h3>📈 Analytics + Session Replay</h3>
+      <p>Pulse → funnel split → Session Replay: the full what/where/why investigation chain, with the 30s buffer and targeting gate animated.</p>
+      <div class="meta"><span class="tagx time">⏱ 20–25 min</span><span class="tagx fmt">🎮 Simulators</span></div>
+      <span class="go">→</span>
+    </a>
+    <a class="course map" href="concept-map.html">
+      <span class="num">Reference · Keep open while learning</span>
+      <h3>🗺️ Statsig ↔ Amplitude Concept Map</h3>
+      <p>Every Statsig concept mapped to its Amplitude equivalent — match quality, key differences, and demo-ready one-liners.</p>
+      <div class="meta"><span class="tagx time">⏱ Reference</span><span class="tagx fmt">🔵 Compare</span></div>
+      <span class="go">→</span>
+    </a>
+  </div>
+
+  <div class="note">⚠️ <b>Heads up:</b> AI-generated learning aids built from the learn-statsig validated corpus. Documentation is never 100% complete — validate specific claims against <a href="https://docs.statsig.com">docs.statsig.com</a> or your SME before using externally.</div>
+
+  <div class="footer">
+    Built by Yi Shiean with Claude · Learn Statsig track ·
+    <a href="https://docs.statsig.com" target="_blank">Statsig Docs</a> ·
+    <a href="https://amplitude.com" target="_blank">Amplitude</a>
+  </div>
+</div>
+</body>
+</html>

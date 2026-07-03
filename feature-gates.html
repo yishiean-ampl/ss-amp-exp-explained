@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Feature Gates Deep Dive",
+  "schemaVersion": 1,
+  "description": "Interactive Learn Statsig course: Feature Gates Deep Dive — 3 units with animated simulators (rule fall-through waterfall, rollout hashing dots, per-rule lift panels, exposure stream, archive incident stepper), ELI6 explanations, AmpliStore equivalents, and per-unit + cumulative quizzes. Content sourced from the learn-statsig validated corpus."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feature Gates Deep Dive · Learn Statsig</title>
+<style>
+:root { color-scheme: light;
+  --blue:#0052F2; --darkblue:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+  --pink:#FF7D78; --red:#F23845; --ink:#0b1220; --muted:#5b6478;
+  --bg:#f7f8fc; --card:#ffffff; --line:#e5e9f4; --green:#0eaa5e; --amber:#e58a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gellix','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:20px 20px 80px}
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--darkblue) 0%,#0a2f7a 60%,var(--blue) 100%);border-radius:20px;padding:34px 30px;color:#fff;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(105,128,255,.45),transparent 70%)}
+.hero h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.hero p{opacity:.85;margin-top:8px;max-width:640px;font-size:.95rem}
+.pillrow{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:.75rem}
+/* NAV */
+.tabs{display:flex;gap:6px;margin:18px 0 22px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:50}
+.tab{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s}
+.tab:hover{border-color:var(--lilac);color:var(--blue)}
+.tab.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(0,82,242,.3)}
+.tab .done{color:var(--green)} .tab.active .done{color:#b8ffd9}
+.panel{display:none;animation:fadeUp .35s ease}
+.panel.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(11,18,32,.04)}
+.card h2{font-size:1.15rem;font-weight:800;color:var(--darkblue);display:flex;align-items:center;gap:8px}
+.card h3{font-size:.98rem;font-weight:700;color:var(--darkblue);margin:14px 0 6px}
+.kicker{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--lilac);margin-bottom:4px}
+.box{border-radius:12px;padding:14px 16px;margin:12px 0;font-size:.9rem}
+.eli6{background:#f2f0ff;border:1px solid #ddd6ff}
+.eli6 .lbl{color:var(--violet)}
+.store{background:#fff4f3;border:1px solid #ffdcda}
+.store .lbl{color:#d4514b}
+.gotcha{background:#fff7ea;border:1px solid #ffe1b0}
+.gotcha .lbl{color:var(--amber)}
+.amp{background:#eef4ff;border:1px solid #cfdeff}
+.amp .lbl{color:var(--blue)}
+.lbl{font-weight:800;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px}
+code{background:#eef1f8;border-radius:6px;padding:2px 6px;font-size:.83em;color:var(--darkblue)}
+/* SIM widgets */
+.sim{background:linear-gradient(180deg,#fbfcff,#f3f5fc);border:1.5px dashed var(--lilac);border-radius:14px;padding:18px;margin:14px 0}
+.sim h4{font-size:.85rem;font-weight:800;color:var(--blue);margin-bottom:10px;display:flex;gap:6px;align-items:center}
+.controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:.85rem}
+.controls label{display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;font-size:.85rem;cursor:pointer;transition:.15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,82,242,.35)}
+.btn.ghost{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.warn{background:var(--red)}
+input[type=range]{accent-color:var(--blue);width:180px}
+.rule{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:.85rem;transition:border-color .3s, box-shadow .3s;position:relative}
+.rule .rname{font-weight:800;color:var(--darkblue)}
+.rule.checking{border-color:var(--amber);box-shadow:0 0 0 4px rgba(229,138,0,.15);animation:pulseB 0.8s infinite}
+.rule.pass{border-color:var(--green);box-shadow:0 0 0 4px rgba(14,170,94,.15)}
+.rule.fail{border-color:var(--red);opacity:.65}
+@keyframes pulseB{0%,100%{box-shadow:0 0 0 3px rgba(229,138,0,.1)}50%{box-shadow:0 0 0 7px rgba(229,138,0,.25)}}
+.verdict{font-weight:800;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:.9rem;display:none}
+.verdict.show{display:block;animation:fadeUp .4s}
+.verdict.pass{background:#e7f8ef;color:var(--green)}
+.verdict.fail{background:#fdecec;color:var(--red)}
+.usercard{display:inline-flex;gap:8px;align-items:center;background:#fff;border:1.5px solid var(--lilac);border-radius:999px;padding:6px 14px;font-size:.83rem;font-weight:700;color:var(--darkblue)}
+/* dots */
+.dots{display:grid;grid-template-columns:repeat(20,1fr);gap:5px;margin:12px 0;max-width:520px}
+.dot{width:100%;aspect-ratio:1;border-radius:50%;background:#d9deec;transition:background .35s, transform .35s}
+.dot.elig{background:var(--lilac)}
+.dot.pass{background:var(--green);transform:scale(1.15)}
+.dot.dropped{animation:dropOut .8s forwards}
+.dot.added{animation:popIn .6s}
+@keyframes dropOut{0%{background:var(--green)}40%{background:var(--red);transform:scale(1.3)}100%{background:var(--lilac);transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(.3)}60%{transform:scale(1.5)}100%{transform:scale(1.15)}}
+.legend{display:flex;gap:14px;font-size:.75rem;color:var(--muted);flex-wrap:wrap;margin-top:6px}
+.legend span{display:flex;align-items:center;gap:5px}
+.swatch{width:11px;height:11px;border-radius:50%;display:inline-block}
+/* metrics panels */
+.mpanels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+@media(max-width:640px){.mpanels{grid-template-columns:1fr}}
+.mpanel{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:14px;font-size:.82rem}
+.mpanel h5{font-size:.8rem;font-weight:800;color:var(--darkblue);margin-bottom:8px}
+.nolift{color:var(--muted);background:#f2f4fa;border-radius:8px;padding:14px;text-align:center;font-weight:600}
+.barrow{margin:8px 0}
+.barlabel{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;color:var(--muted)}
+.bartrack{background:#eef1f8;border-radius:6px;height:16px;overflow:hidden;margin-top:3px}
+.barfill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.liftbadge{display:inline-block;background:#e7f8ef;color:var(--green);font-weight:800;border-radius:8px;padding:4px 10px;margin-top:8px;font-size:.85rem}
+/* ticker */
+.ticker{background:#0b1220;border-radius:12px;padding:12px;height:110px;overflow:hidden;position:relative;margin-top:10px}
+.ticker .ev{color:#9fd6ff;font-family:ui-monospace,Menlo,monospace;font-size:.72rem;padding:2px 0;animation:fadeUp .3s}
+.ticker .stopped{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,18,32,.85);color:#ffce7a;font-weight:800;font-size:.9rem;text-align:center;padding:10px}
+/* stepper */
+.phone{width:210px;background:#fff;border:2px solid var(--darkblue);border-radius:22px;padding:14px;margin:0 auto;box-shadow:0 8px 24px rgba(0,26,79,.15)}
+.phone .appbar{font-weight:800;font-size:.8rem;color:var(--darkblue);text-align:center;margin-bottom:8px}
+.phone .item{background:#f2f4fa;border-radius:8px;height:16px;margin:7px 0}
+.feature{background:linear-gradient(90deg,var(--blue),var(--lilac));color:#fff;border-radius:10px;padding:9px;text-align:center;font-weight:800;font-size:.75rem;transition:all .5s}
+.feature.gone{opacity:0;transform:scale(.7);height:0;padding:0;overflow:hidden;margin:0}
+.payload{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;background:#0b1220;color:#c8f7dd;border-radius:10px;padding:12px;margin-top:10px;white-space:pre;transition:.3s}
+.steprow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.stepmsg{font-size:.85rem;font-weight:700;margin-top:10px;padding:10px 14px;border-radius:10px;background:#eef4ff;color:var(--darkblue)}
+.stepmsg.bad{background:#fdecec;color:var(--red)}
+/* quiz */
+.q{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.q .qt{font-weight:700;font-size:.92rem;margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;background:#f7f8fc;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:6px 0;font-size:.86rem;cursor:pointer;transition:.15s;font-family:inherit}
+.opt:hover{border-color:var(--lilac)}
+.opt.correct{background:#e7f8ef;border-color:var(--green);font-weight:700}
+.opt.wrong{background:#fdecec;border-color:var(--red)}
+.fb{display:none;font-size:.85rem;border-radius:10px;padding:12px;margin-top:8px}
+.fb.show{display:block;animation:fadeUp .3s}
+.fb.good{background:#e7f8ef;color:#0a6e40}
+.fb.bad{background:#fff7ea;color:#8a5b00}
+.reason{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px;font-size:.85rem;font-family:inherit;margin:6px 0;resize:vertical;min-height:44px}
+.scorebox{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border-radius:14px;padding:18px;text-align:center;font-weight:800;font-size:1.05rem;margin-top:14px;display:none}
+.scorebox.show{display:block;animation:fadeUp .4s}
+.predict{background:#f0fbff;border:1px solid #bfe9ff;border-radius:12px;padding:14px;margin:12px 0;font-size:.9rem}
+.predict .lbl{color:#0a86b8}
+.reveal{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #bfe9ff}
+.reveal.show{display:block;animation:fadeUp .3s}
+.footer{font-size:.78rem;color:var(--muted);margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+.footer a{color:var(--blue)}
+.andor{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+@media(max-width:640px){.andor{grid-template-columns:1fr}}
+.andor .col{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px;font-size:.82rem}
+.chip{display:inline-block;border-radius:999px;padding:3px 10px;font-size:.72rem;font-weight:800;margin:2px}
+.chip.and{background:#fdecec;color:var(--red)}
+.chip.or{background:#e7f8ef;color:var(--green)}
+.next{display:flex;justify-content:flex-end;margin-top:6px}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#fff;font-weight:800;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">4️⃣ Analytics + SR</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+<div class="wrap">
+
+<div class="hero">
+  <h1>🚪 Feature Gates Deep Dive</h1>
+  <p>Build with Statsig safely: how gates <em>actually</em> evaluate rules, how to read gate metrics without fooling yourself, and how to operate gates without breaking production. Every concept comes with an ELI6 🧒 and an AmpliStore 🛍️ equivalent.</p>
+  <div class="pillrow">
+    <span class="pill">⏱ 20–25 min</span><span class="pill">📚 Unit 1 · Rules + Rollout</span>
+    <span class="pill">📊 Unit 2 · Metrics + Diagnostics</span><span class="pill">🛡️ Unit 3 · Safe Operations</span>
+    <span class="pill">🏁 Cumulative Quiz</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-t="t0">👋 Start</button>
+  <button class="tab" data-t="t1">1️⃣ Rules + Rollout <span class="done" id="d1"></span></button>
+  <button class="tab" data-t="t2">2️⃣ Metrics <span class="done" id="d2"></span></button>
+  <button class="tab" data-t="t3">3️⃣ Safe Ops <span class="done" id="d3"></span></button>
+  <button class="tab" data-t="t4">🏁 Final Quiz <span class="done" id="d4"></span></button>
+</div>
+
+<!-- ============ START ============ -->
+<div class="panel show" id="t0">
+  <div class="card">
+    <div class="kicker">Course Opening</div>
+    <h2>You've shipped behind a gate before. Something probably surprised you. 😅</h2>
+    <p style="margin-top:8px;font-size:.92rem">Rules that didn't fire, metrics showing nothing, a gate behaving weirdly after you raised the rollout %. This course explains <b>why</b> — with three units and lots of clicking.</p>
+    <div class="box eli6"><span class="lbl">🧒 ELI6 — what's a feature gate?</span>
+      A feature gate is a <b>light switch for a feature</b> that lives in the cloud instead of in your code. Your app asks "is the switch on for THIS person?" and Statsig answers true or false. You can flip it for everyone, some people, or just your friends — without shipping new code.</div>
+    <div class="box store"><span class="lbl">🛍️ AmpliStore equivalent</span>
+      Imagine AmpliStore is launching <b>"1-Click Checkout."</b> Instead of releasing it to every shopper at once, you wrap it in a gate: VIP loyalty members get it first, then 25% of everyone else, then 100% once metrics look healthy. Same story you'd tell in the Amplitude demo with an <b>Experiment feature flag</b> in the AmpliStore project — Statsig just makes the gate itself the star of the show.</div>
+    <p style="font-size:.9rem;margin-top:6px">The through-line for the whole course: <b>gate metrics are signals, not proofs.</b> Keep that in your pocket — it comes back in every unit. 🧵</p>
+    <div class="next"><button class="btn" onclick="go('t1')">Start Unit 1 →</button></div>
+  </div>
+</div>
+
+<!-- ============ UNIT 1 ============ -->
+<div class="panel" id="t1">
+  <div class="card">
+    <div class="kicker">Unit 1 · ~7 min</div>
+    <h2>⚖️ Rules + Rollout Architecture</h2>
+    <p style="font-size:.9rem;margin-top:6px">Two facts resolve most "my gate isn't behaving" tickets: rules evaluate <b>top-to-bottom with fall-through</b>, and <b>targeting eligibility is a separate control from rollout %</b>.</p>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      Rule 1 targets iOS users at 20% rollout. A user IS on iOS but falls outside the 20% bucket. Does Statsig evaluate Rule 2 for them?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>Yes!</b> Failing a rule for ANY reason — wrong targeting OR outside the rollout % — means the user falls through to the next rule. Play with the simulator below to feel it. 👇</div>
+    </div>
+
+    <h3>LO1 · Rules evaluate top-to-bottom with fall-through 🪜</h3>
+    <p style="font-size:.88rem">A user who fails Rule 1 (didn't match targeting, OR matched but lost the rollout lottery) moves to Rule 2. The decision at each rule is final before the next is considered.</p>
+
+    <div class="sim">
+      <h4>🎮 Simulator: watch a shopper fall through the rules</h4>
+      <div class="controls">
+        <label><input type="checkbox" id="u_ios" checked> 📱 On iOS</label>
+        <label><input type="checkbox" id="u_us"> 🇺🇸 In the US</label>
+        <label>🎲 Rule 2 rollout <input type="range" id="r2pct" min="0" max="100" value="50" oninput="document.getElementById('r2v').textContent=this.value+'%'"> <b id="r2v">50%</b></label>
+        <button class="btn" onclick="runWaterfall()">▶ Evaluate user</button>
+      </div>
+      <div class="usercard">🧑‍💻 Shopper · bucket hash: <span id="hashv">—</span></div>
+      <div class="rule" id="rule1"><span class="rname">Rule 1 — "iOS shoppers in the US"</span> · conditions: <code>platform = iOS</code> <b>AND</b> <code>country = US</code> · rollout 100%</div>
+      <div class="rule" id="rule2"><span class="rname">Rule 2 — "Everyone else"</span> · condition: <code>everyone</code> · rollout <b id="r2lab">50%</b></div>
+      <div class="rule" id="rule3"><span class="rname">Default</span> · no rules matched → gate returns <code>false</code></div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      It's like three doors in a hallway, checked <b>in order</b>. Door 1's bouncer checks his list; if you're not on it (or you lose his coin flip), you walk to Door 2. Nobody ever walks backwards to retry Door 1.</div>
+
+    <h3>⚠️ The AND vs OR trap</h3>
+    <div class="andor">
+      <div class="col"><span class="chip and">❌ ONE rule, two conditions = AND</span><br>
+        Rule 1: <code>platform = iOS</code> + <code>country = US</code><br>→ only shoppers who are <b>BOTH</b> iOS <b>AND</b> in the US pass. iOS user in Singapore? Fails. 🙅</div>
+      <div class="col"><span class="chip or">✅ TWO rules = OR (via fall-through)</span><br>
+        Rule 1: <code>platform = iOS</code><br>Rule 2: <code>country = US</code><br>→ iOS <b>OR</b> US shoppers pass. Fall-through gives you OR for free. 🎉</div>
+    </div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      This is the #1 gate misconfiguration. Conditions inside a rule are ALWAYS AND. Want OR? Stack separate rules. The UI doesn't make this visually obvious.</div>
+
+    <h3>LO2 · Targeting and rollout % are separate dials 🎛️</h3>
+    <p style="font-size:.88rem"><b>Targeting</b> = who's eligible (the guest list). <b>Rollout %</b> = what fraction of the eligible actually get it (the lottery at the door). Raising % never changes who qualifies — only the sampling rate inside the qualifying pool.</p>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      The guest list says "only kids from Room 3 can enter the bouncy castle." The rollout dial says "…and only half of them at a time." Turning the dial doesn't add kids from Room 4 — it just lets more Room 3 kids in.</div>
+
+    <h3>LO3 · Raising vs lowering % is asymmetric ↕️</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: 100 shoppers, deterministic hashing</h4>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Purple = eligible shoppers. Each has a <b>fixed hash</b> (their lottery number never changes). Move the dial and watch what happens. ⬆️ Raising: everyone green stays green, new greens pop in. ⬇️ Lowering: some greens get <b>kicked out</b> (they flash red) — re-evaluation is real.</p>
+      <div class="controls">
+        <label>Rollout % <input type="range" id="dotpct" min="0" max="100" step="10" value="30" oninput="updateDots(+this.value)"> <b id="dotlab">30%</b></label>
+        <span style="font-weight:700;font-size:.85rem">✅ Passing: <span id="passcount">—</span>/100</span>
+      </div>
+      <div class="dots" id="dots"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:#d9deec"></i>not eligible</span>
+        <span><i class="swatch" style="background:var(--lilac)"></i>eligible, not passing</span>
+        <span><i class="swatch" style="background:var(--green)"></i>passing 🎉</span>
+      </div>
+    </div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      Lowering rollout % to "remove one specific user" doesn't work — it's probabilistic, they might still pass. To guarantee someone never sees the feature: use an <b>override set to fail</b>, or an explicit exclusion rule.</div>
+
+    <div class="box store"><span class="lbl">🛍️ AmpliStore equivalent</span>
+      Gate: <code>one_click_checkout</code>. Rule 1: <code>loyalty_tier = VIP</code> at 100%. Rule 2: everyone else at 25%. A VIP reports "I don't see it!" → first suspect: is <code>loyalty_tier</code> actually being sent on the user object? Missing properties are the #1 cause of "rule doesn't fire" tickets. In your Amplitude AmpliStore demo, this maps to Experiment flag targeting on the <b>UTM Source / user property</b> — same guest-list-vs-dial logic.</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude comparison</span>
+      Amplitude Experiment flags = close match. Key difference: Statsig's partial-rollout gate <b>automatically generates a pass/fail comparison panel</b> (gate-as-test). In Amplitude, flag and experiment are more separate objects.</div>
+
+    <h3>📝 Unit 1 quiz</h3>
+    <div id="quiz1"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(1);go('t2')">Finish Unit 1 → Metrics</button></div>
+  </div>
+</div>
+
+<!-- ============ UNIT 2 ============ -->
+<div class="panel" id="t2">
+  <div class="card">
+    <div class="kicker">Unit 2 · ~8 min</div>
+    <h2>📊 Reading Gate Metrics + Diagnostics</h2>
+    <p style="font-size:.9rem;margin-top:6px">The most misunderstood part of gates. Two facts fix almost all confusion: metrics are <b>per-rule</b>, and lift needs a <b>comparison group</b> to exist.</p>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      Your gate has Rule 1 (internal users, 100%) and Rule 2 (everyone else, 50%), live for 2 weeks. How many lift calculations appear?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>One — Rule 2 only.</b> Rule 1 at 100% has nobody failing, so there's nothing to compare against. No fail group = no lift. See it live below. 👇</div>
+    </div>
+
+    <h3>LO4 · Metrics are per-rule — no aggregate view 🧩</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: drag Rule 2's rollout and watch the lift panel</h4>
+      <div class="controls">
+        <label>Rule 2 rollout <input type="range" id="liftpct" min="0" max="100" step="10" value="50" oninput="updateLift(+this.value)"> <b id="liftlab">50%</b></label>
+      </div>
+      <div class="mpanels">
+        <div class="mpanel"><h5>Rule 1 · Internal users · 100% 🔒</h5>
+          <div class="nolift">😶 No lift shown.<br>Everyone passes → no comparison group.<br><i>Not broken — by design.</i></div></div>
+        <div class="mpanel"><h5>Rule 2 · Everyone else · <span id="liftlab2">50%</span></h5>
+          <div id="liftbody"></div></div>
+      </div>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      You can't tell if the new vitamin works if <b>every single kid</b> takes it. You need some kids who didn't, to compare. A rule at 100% = every kid took the vitamin = 🤷 no comparison possible.</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      "My gate is at 50% but metrics show nothing!" — the panel appears, but lift only shows for metrics where exposed users <b>also fired the metric event</b>. No purchase events in the pass group yet? Empty panel. Empty ≠ broken.</div>
+
+    <h3>LO5 · Exposure logs STOP at 0% and 100% — by design 📴</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: the exposure event stream</h4>
+      <div class="controls">
+        <label>Rollout % <input type="range" id="expct" min="0" max="100" step="10" value="50" oninput="updateTicker(+this.value)"> <b id="explab">50%</b></label>
+      </div>
+      <div class="ticker" id="ticker"></div>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      The referee only keeps score while there are <b>two teams playing</b>. When one team has everybody (100%) or nobody (0%), there's no game to score, so the referee puts the whistle down. Silence = the game ended, not a broken whistle.</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      "No exposures landing in BigQuery — the pipeline is broken!" → Check the rollout % first. At 0% or 100%, warehouse exports stop receiving exposure events. Expected behavior, not an incident.</div>
+
+    <h3>LO6 · Diagnostics tab = first stop when a gate "isn't working" 🩺</h3>
+    <p style="font-size:.88rem">Three checks, in order: ① Is the gate being evaluated at all (non-zero exposure count)? ② Does the pass % match your expected rollout %? ③ Are passing users also firing metric events?</p>
+
+    <div class="box store"><span class="lbl">🛍️ AmpliStore equivalent</span>
+      <code>one_click_checkout</code> Rule 2 at 50%: the lift panel compares <b>purchase rate</b> and <b>cart abandonment</b> between pass and fail shoppers. If nobody's completed a checkout yet today, the panel is empty — wait for events, don't file a ticket. In the AmpliStore Amplitude project, the analogous debug motion is checking <b>exposure events</b> in the Experiment diagnostics view before touching anything else.</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude comparison</span>
+      Amplitude Experiment has a Diagnostics view (partial match). Difference: Statsig shows <b>lift per rule inline on the gate</b>; Amplitude separates flag from experiment, so "flag metrics" doesn't map 1:1.</div>
+
+    <h3>⭐ The big idea: gate metrics are observational, not causal</h3>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      If you give cookies only to the kids who finished their homework, and then notice "cookie kids are better at math!" … it's not the cookies. 🍪 You <b>picked</b> the good-at-homework kids. Gate targeting picks people by a rule, not randomly — so differences might come from WHO you picked, not WHAT you gave them. Random picking (an experiment) is what makes it fair.</div>
+
+    <h3>📝 Unit 2 quiz</h3>
+    <div id="quiz2"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(2);go('t3')">Finish Unit 2 → Safe Ops</button></div>
+  </div>
+</div>
+
+<!-- ============ UNIT 3 ============ -->
+<div class="panel" id="t3">
+  <div class="card">
+    <div class="kicker">Unit 3 · ~8 min</div>
+    <h2>🛡️ Safe Operations: Overrides, Archiving, Graduation</h2>
+    <p style="font-size:.9rem;margin-top:6px">Three things cause unintended production changes: override permissions, archiving behavior, and skipping the gate-to-experiment conversion.</p>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      You archive a gate that's been at 100% for three months. Do users still see the feature afterwards?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>No! 💥</b> Archiving removes the gate from the SDK payload, so <code>checkGate()</code> returns <code>false</code> — the feature vanishes. Step through the incident below. 👇</div>
+    </div>
+
+    <h3>LO8 · Archiving removes the gate from the SDK payload 🗑️</h3>
+    <div class="sim">
+      <h4>🎬 Animation: "just cleaning up" — a production incident in 4 steps</h4>
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">
+        <div class="phone">
+          <div class="appbar">🛍️ AmpliStore</div>
+          <div class="item"></div><div class="item"></div>
+          <div class="feature" id="feat">⚡ 1-Click Checkout</div>
+          <div class="item"></div>
+        </div>
+        <div>
+          <div class="payload" id="payload">// SDK config payload
+{
+  "gates": {
+    "one_click_checkout": {
+      "state": "Launched",
+      "rollout": 100
+    }
+  }
+}</div>
+          <div class="stepmsg" id="stepmsg">Step 1/4 — Gate is <b>Launched</b> at 100%. Shoppers happily 1-click away. 😌</div>
+        </div>
+      </div>
+      <div class="steprow">
+        <button class="btn" id="stepbtn" onclick="archStep()">Next step ▶</button>
+        <button class="btn ghost" onclick="archReset()">↺ Reset</button>
+      </div>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      The gate is a sticky note on the fridge that says "dessert is allowed." Your code checks the fridge every morning. Archiving <b>throws away the sticky note</b> — and when the code finds no note, it assumes "no dessert" (<code>false</code>). If you never removed the "check the fridge" habit from the code, dessert disappears for everyone. 🍰❌</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha — the correct cleanup order</span>
+      ① Remove the <code>checkGate()</code> call from code → ② merge and deploy → ③ THEN archive the gate. Archiving first = users lose the feature instantly. (Or leave it in "Launched" state indefinitely until code cleanup happens; "Permanent" gates even resolve <code>true</code> after archiving.)</div>
+
+    <h3>LO7 · Overrides need LAUNCH permission, not edit 🔐</h3>
+    <p style="font-size:.88rem">Overrides bypass targeting rules and hit production users — so saving one requires <b>launch</b> permission. Edit-only users can configure an override in the UI but the save fails.</p>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      Anyone in class can <b>write</b> on the whiteboard plan for the field trip (edit). But only the teacher can <b>open the bus door</b> (launch). An override is opening the door for a specific kid — teacher-level move.</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      QA engineer with edit access sets an override, clicks save → permission error. Fix: request launch access, or have an admin enable <b>"Bypass Reviews for Overrides"</b> at the project level to streamline QA.</div>
+
+    <h3>LO9 · Graduate the gate to an experiment for causal proof 🎓</h3>
+    <p style="font-size:.88rem">Want to know if the feature <b>caused</b> the metric movement? Convert the gate to an experiment — a first-class UI action in Statsig. Targeting logic is preserved; you gain hypothesis framing, named variants, and full Pulse with statistical testing.</p>
+    <div class="box store"><span class="lbl">🛍️ AmpliStore equivalent</span>
+      <code>one_click_checkout</code> looks great at 25% — purchase rate up. Before shouting "ship it!" in the AmpliStore QBR: convert to an experiment, randomize 50/50, and let Pulse tell you whether the lift is real or just VIP-selection bias. In the Amplitude demo the same story = create an experiment referencing the existing flag (the conversion is less of a one-click motion there — that's the demo contrast).</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude comparison</span>
+      Amplitude's flag-to-experiment flow = close match. Difference: Statsig's conversion is a first-class UI action; in Amplitude it looks more like creating a new experiment that references the existing flag.</div>
+
+    <h3>📝 Unit 3 quiz</h3>
+    <div id="quiz3"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(3);go('t4')">Finish Unit 3 → Final Quiz</button></div>
+  </div>
+</div>
+
+<!-- ============ FINAL ============ -->
+<div class="panel" id="t4">
+  <div class="card">
+    <div class="kicker">Course Close</div>
+    <h2>🏁 Cumulative Quiz — 5 questions, all units</h2>
+    <p style="font-size:.9rem;margin:8px 0">The through-line one last time: <b>gate metrics are signals, not proofs.</b> When you need causal evidence, convert to an experiment. Aim for 4/5 (80%) to pass. 💪</p>
+    <div id="quizF"></div>
+    <div class="scorebox" id="scorebox"></div>
+    <div class="box store" style="margin-top:16px"><span class="lbl">🛍️ Your demo cheat-sheet takeaway</span>
+      One AmpliStore narrative that exercises the whole course: "We gated <code>one_click_checkout</code> to VIPs first (targeting), dialed everyone else to 25% (rollout), read the per-rule lift panel (signals!), noticed exposure logs stop at 100% (by design), converted to an experiment for causal proof (graduation), cleaned up code THEN archived (safe ops)." Six concepts, one story. 🎤</div>
+    <div class="footer">
+      📎 <b>Sources:</b> learn-statsig corpus · <code>courses/03-feature-gates-dd.md</code>, <code>topics/03-feature-flags.md</code> ·
+      <a href="https://docs.statsig.com/feature-flags/conditions" target="_blank">Rule conditions</a> ·
+      <a href="https://docs.statsig.com/feature-flags/view-exposures" target="_blank">Viewing exposures</a> ·
+      <a href="https://docs.statsig.com/feature-flags/feature-flags-lifecycle" target="_blank">Gate lifecycle</a><br>
+      ⚠️ AI-generated learning aid — validate specifics against the docs or your SME before using externally.
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+/* ---------- tabs ---------- */
+const tabs=document.querySelectorAll('.tab');
+function go(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  tabs.forEach(t=>t.classList.toggle('active',t.dataset.t===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='t2') updateTicker(+document.getElementById('expct').value);
+}
+tabs.forEach(t=>t.addEventListener('click',()=>go(t.dataset.t)));
+function finishUnit(n){try{const d=JSON.parse(localStorage.getItem('fgdd')||'{}');d['u'+n]=1;localStorage.setItem('fgdd',JSON.stringify(d));}catch(e){}markDone();}
+function markDone(){try{const d=JSON.parse(localStorage.getItem('fgdd')||'{}');[1,2,3,4].forEach(n=>{const el=document.getElementById('d'+n);if(el)el.textContent=d['u'+n]?'✓':'';});}catch(e){}}
+markDone();
+
+/* ---------- Unit 1: waterfall ---------- */
+function runWaterfall(){
+  const ios=document.getElementById('u_ios').checked, us=document.getElementById('u_us').checked;
+  const pct=+document.getElementById('r2pct').value;
+  document.getElementById('r2lab').textContent=pct+'%';
+  const hash=Math.floor(Math.random()*100);
+  document.getElementById('hashv').textContent=hash;
+  const r1=document.getElementById('rule1'),r2=document.getElementById('rule2'),r3=document.getElementById('rule3'),v=document.getElementById('verdict');
+  [r1,r2,r3].forEach(r=>r.className='rule'); v.className='verdict';
+  const seq=[];
+  seq.push(()=>r1.classList.add('checking'));
+  const r1pass = ios && us;
+  seq.push(()=>{r1.classList.remove('checking');r1.classList.add(r1pass?'pass':'fail');});
+  if(r1pass){seq.push(()=>{v.textContent='✅ PASS on Rule 1 — iOS AND US both matched (AND logic!). Gate returns true.';v.className='verdict show pass';});}
+  else{
+    seq.push(()=>r2.classList.add('checking'));
+    const r2pass = hash < pct;
+    seq.push(()=>{r2.classList.remove('checking');r2.classList.add(r2pass?'pass':'fail');});
+    if(r2pass){seq.push(()=>{v.textContent=`✅ PASS on Rule 2 — fell through from Rule 1, and hash ${hash} < ${pct}% rollout. Gate returns true.`;v.className='verdict show pass';});}
+    else{seq.push(()=>r3.classList.add('checking'));
+      seq.push(()=>{r3.classList.remove('checking');r3.classList.add('fail');
+        v.textContent=`❌ FAIL — fell through Rule 1 (targeting) and Rule 2 (hash ${hash} ≥ ${pct}%). Default: gate returns false.`;v.className='verdict show fail';});}
+  }
+  seq.forEach((f,i)=>setTimeout(f,i*650));
+}
+
+/* ---------- Unit 1: dots ---------- */
+const ELIG=70; // 70 of 100 eligible
+let hashes=[],prevPct=30;
+(function initDots(){
+  const c=document.getElementById('dots');
+  for(let i=0;i<100;i++){
+    const d=document.createElement('div');d.className='dot';d.dataset.i=i;
+    hashes[i]=(i*37+11)%100;
+    if(i<ELIG)d.classList.add('elig'); else hashes[i]=999;
+    c.appendChild(d);
+  }
+  updateDots(30,true);
+})();
+function updateDots(pct,init){
+  document.getElementById('dotlab').textContent=pct+'%';
+  let pass=0;
+  document.querySelectorAll('.dot').forEach(d=>{
+    const i=+d.dataset.i; if(i>=ELIG)return;
+    const was=d.classList.contains('pass'), now=hashes[i]<pct;
+    d.classList.remove('added','dropped');
+    if(now){pass++; if(!was){d.classList.add('pass'); if(!init&&pct>prevPct)d.classList.add('added');} }
+    else{ if(was){d.classList.remove('pass'); if(!init&&pct<prevPct)d.classList.add('dropped');} }
+    if(now)d.classList.add('pass');
+  });
+  document.getElementById('passcount').textContent=pass;
+  prevPct=pct;
+}
+
+/* ---------- Unit 2: lift ---------- */
+function updateLift(pct){
+  document.getElementById('liftlab').textContent=pct+'%';
+  document.getElementById('liftlab2').textContent=pct+'%';
+  const b=document.getElementById('liftbody');
+  if(pct===0||pct===100){
+    b.innerHTML='<div class="nolift">😶 No lift at '+pct+'%.<br>'+(pct===100?'Everyone passes':'Nobody passes')+' → no comparison group.<br><i>Not broken — by design.</i></div>';
+    return;
+  }
+  b.innerHTML=`
+    <div class="barrow"><div class="barlabel"><span>✅ Pass group · purchase rate</span><span>8.4%</span></div>
+      <div class="bartrack"><div class="barfill" style="background:linear-gradient(90deg,var(--blue),var(--lilac))" data-w="84%"></div></div></div>
+    <div class="barrow"><div class="barlabel"><span>⬜ Fail group · purchase rate</span><span>7.1%</span></div>
+      <div class="bartrack"><div class="barfill" style="background:#b9c3dd" data-w="71%"></div></div></div>
+    <span class="liftbadge">📈 +18.3% lift (observational — a signal, not proof!)</span>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    b.querySelectorAll('.barfill').forEach(f=>f.style.width=f.dataset.w);
+  }));
+}
+updateLift(50);
+
+/* ---------- Unit 2: ticker ---------- */
+let tickInt=null,evn=0;
+const names=['vip_shopper_88','sg_user_412','guest_9021','loyal_kim_77','my_user_305','tw_shopper_64'];
+function updateTicker(pct){
+  document.getElementById('explab').textContent=pct+'%';
+  const t=document.getElementById('ticker');
+  if(tickInt){clearInterval(tickInt);tickInt=null;}
+  if(pct===0||pct===100){
+    t.innerHTML='<div class="stopped">📴 Exposure logging STOPPED at '+pct+'%.<br>No split to compare → nothing to log. By design — check rollout % before blaming the pipeline!</div>';
+    return;
+  }
+  t.innerHTML='';
+  tickInt=setInterval(()=>{
+    const pass=Math.random()*100<pct;
+    const div=document.createElement('div');div.className='ev';
+    div.textContent=`▸ exposure  gate=one_click_checkout  user=${names[evn++%names.length]}  result=${pass?'PASS ✅':'FAIL ⬜'}  →  warehouse`;
+    t.prepend(div);
+    while(t.children.length>6)t.removeChild(t.lastChild);
+  },700);
+}
+
+/* ---------- Unit 3: archive stepper ---------- */
+let aStep=1;
+const aMsgs={
+ 2:{p:`// SDK config payload\n{\n  "gates": {\n    "one_click_checkout": {\n      "state": "Launched",\n      "rollout": 100\n    }\n  }\n}`,m:'Step 2/4 — Engineer thinks: "Shipped at 100% for 2 months. Time to clean up. Archive!" 🧹',bad:false,feat:true},
+ 3:{p:`// SDK config payload\n{\n  "gates": {\n    \n  }   // ⚠️ gate REMOVED from payload\n}`,m:'Step 3/4 — Archived. The gate vanishes from the SDK payload. Code still calls checkGate("one_click_checkout")… which now returns FALSE. 😱',bad:true,feat:false},
+ 4:{p:`// the fix — correct order:\n// 1️⃣ delete checkGate() call from code\n// 2️⃣ merge + deploy\n// 3️⃣ THEN archive the gate ✅`,m:'Step 4/4 — Feature gone for every shopper = production incident. Correct sequence: code cleanup FIRST, archive LAST.',bad:true,feat:false}
+};
+function archStep(){
+  if(aStep>=4)return;
+  aStep++;
+  const s=aMsgs[aStep];
+  document.getElementById('payload').textContent=s.p;
+  const m=document.getElementById('stepmsg');m.innerHTML=s.m;m.className='stepmsg'+(s.bad?' bad':'');
+  document.getElementById('feat').classList.toggle('gone',!s.feat);
+  if(aStep===4)document.getElementById('stepbtn').textContent='Done ✓';
+}
+function archReset(){
+  aStep=1;
+  document.getElementById('payload').textContent=`// SDK config payload\n{\n  "gates": {\n    "one_click_checkout": {\n      "state": "Launched",\n      "rollout": 100\n    }\n  }\n}`;
+  const m=document.getElementById('stepmsg');m.className='stepmsg';m.innerHTML='Step 1/4 — Gate is <b>Launched</b> at 100%. Shoppers happily 1-click away. 😌';
+  document.getElementById('feat').classList.remove('gone');
+  document.getElementById('stepbtn').textContent='Next step ▶';
+}
+
+/* ---------- quizzes ---------- */
+const QUIZ={
+ quiz1:[
+  {q:'🧠 A PM targets "Premium plan users" at 50% rollout. A Premium user keeps reporting they don\'t see the feature. The TWO most likely explanations?',reason:true,
+   opts:[
+    {t:'They fell in the 50% not passing (rollout is probabilistic) AND/OR their plan property isn\'t being passed on the user object',ok:true,fb:'✅ Exactly — both counts. People assume targeting + some % = guaranteed pass. And a missing/mismatched property is the #1 cause of "rule doesn\'t fire" tickets.'},
+    {t:'The gate must be broken — Premium users should always pass Rule 1',ok:false,fb:'❌ Meeting targeting criteria only makes you eligible for the 50% lottery. Deterministic hashing decides who actually passes.'},
+    {t:'The user needs to clear cache and reinitialize the SDK',ok:false,fb:'❌ Assignment is stable across initializations by design — reinitializing won\'t move them out of the fail bucket.'}]},
+  {q:'🧠 A team wants to expose iOS users OR US users. An engineer adds both conditions to a single rule. What actually happens?',reason:true,
+   opts:[
+    {t:'Only users who are iOS AND in the US pass — conditions in one rule are AND. OR needs two separate rules.',ok:true,fb:'✅ Right. Conditions within a rule = AND; separate rules = OR via fall-through. Most common gate misconfiguration.'},
+    {t:'Both conditions in one rule = OR logic; works as intended',ok:false,fb:'❌ Conditions in a single rule are always AND in Statsig. Multiple conditions = "must match all."'},
+    {t:'The gate evaluates randomly between the two conditions',ok:false,fb:'❌ Nothing random about condition evaluation — it\'s strict AND within a rule.'}]}],
+ quiz2:[
+  {q:'🧠 PM: "Gate metrics are green — retention +12% in the pass group. Proof it works. Ship to 100%!" What\'s wrong with this reasoning?',reason:true,
+   opts:[
+    {t:'Gate metrics are observational, not causal — the pass group was targeted by a rule, not randomized, so the lift may reflect WHO was targeted',ok:true,fb:'✅ Exactly. Pass vs fail on a targeted rule = two different populations, not treatment vs control. For causal evidence: convert to an experiment.'},
+    {t:'12% lift is strong evidence — gate metrics are as reliable as experiment Pulse',ok:false,fb:'❌ Looks like Pulse, isn\'t Pulse. Experiments randomize; gates target. Same math, different causal meaning.'},
+    {t:'Gate metrics can\'t be used for ship decisions at all',ok:false,fb:'❌ Too strong — they\'re useful signals for direction. They\'re just not proof.'}]},
+  {q:'🧮 Gate with Rule 1 at 100% and Rule 2 at 50%. How many lift calculations appear?',reason:false,
+   opts:[
+    {t:'One — Rule 2 only. Rule 1 at 100% has no fail group, so no lift is calculable.',ok:true,fb:'✅ Right. No comparison group at 100% → no lift. Rule 2\'s 50/50 split gives the only lift.'},
+    {t:'Two — one for each rule',ok:false,fb:'❌ Rule 1 at 100% shows no lift — everyone passes, nothing to compare against.'},
+    {t:'None — gate metrics don\'t appear until you convert to an experiment',ok:false,fb:'❌ Partial-rollout rules DO get a lift panel — that\'s the gate-as-test pattern.'}]}],
+ quiz3:[
+  {q:'🧠 An engineer archived a gate that was at 100% for two months ("just cleaning up"). Users now report the feature disappeared. What happened + correct process?',reason:true,
+   opts:[
+    {t:'Archiving removed the gate from the SDK payload → checkGate() returns false. Correct order: remove the code call first, deploy, THEN archive.',ok:true,fb:'✅ Right — one of the most common production incidents from gate cleanup. Code first, archive last. Or park in "Launched" indefinitely.'},
+    {t:'SDK caching issue — archiving shouldn\'t affect active users',ok:false,fb:'❌ Archiving immediately removes the gate from the config payload. No cache preserves it.'},
+    {t:'The gate must have been at 0% when archived — someone rolled it back',ok:false,fb:'❌ No rollback needed. Archiving at ANY rollout removes it from the payload — code falls back to false.'}]},
+  {q:'🔐 You set a QA override so your test device always passes. Save → permission error. Minimum access needed, and why?',reason:false,
+   opts:[
+    {t:'Launch permission — overrides bypass targeting and can affect production users, so edit isn\'t enough',ok:true,fb:'✅ Right. Tip: admins can enable "Bypass Reviews for Overrides" per project to streamline QA.'},
+    {t:'Admin-level access only',ok:false,fb:'❌ Launch permission is sufficient — no need for full admin.'},
+    {t:'Edit access is sufficient — it\'s just a configuration change',ok:false,fb:'❌ Edit lets you configure the override but the SAVE requires launch — it changes what production users see.'}]}],
+ quizF:[
+  {q:'1️⃣ A user fails Rule 1 because they fell outside its rollout %. What happens next?',reason:false,
+   opts:[
+    {t:'They fall through to Rule 2 — failing for ANY reason (targeting or rollout) moves them to the next rule',ok:true,fb:'✅ Fall-through applies to both failure modes.'},
+    {t:'The gate immediately returns false — rollout failure is final',ok:false,fb:'❌ Only the DEFAULT (after all rules) returns false. Rollout failure on one rule → next rule.'},
+    {t:'They\'re re-evaluated against Rule 1 on next session',ok:false,fb:'❌ Deterministic hashing = stable assignment; and evaluation always proceeds downward, not in loops.'}]},
+  {q:'2️⃣ Fastest way to build "iOS OR US" targeting?',reason:false,
+   opts:[
+    {t:'Two rules: Rule 1 = iOS, Rule 2 = US',ok:true,fb:'✅ Separate rules = OR via fall-through.'},
+    {t:'One rule with both conditions',ok:false,fb:'❌ That\'s AND — only iOS users in the US would pass.'},
+    {t:'Duplicate the gate, one per condition',ok:false,fb:'❌ Two gates = two payload entries and two code checks. Two rules in ONE gate does it.'}]},
+  {q:'3️⃣ Why does a rule at 100% rollout show no lift?',reason:false,
+   opts:[
+    {t:'No fail group exists — there\'s nothing to compare the pass group against',ok:true,fb:'✅ No comparison group, no lift. By design.'},
+    {t:'The metrics pipeline pauses at 100%',ok:false,fb:'❌ It\'s not a pipeline pause — it\'s a math impossibility. No control group.'},
+    {t:'Lift only appears after converting to an experiment',ok:false,fb:'❌ Partial rollouts show lift on the gate itself (gate-as-test).'}]},
+  {q:'4️⃣ Exposures stopped flowing to your warehouse. First thing to check?',reason:false,
+   opts:[
+    {t:'The gate\'s rollout % — at 0% or 100%, exposure logging stops by design',ok:true,fb:'✅ Right. Absence of exposure logs at the extremes is expected, not an incident.'},
+    {t:'The warehouse export credentials',ok:false,fb:'❌ Maybe eventually — but rollout % first. 0%/100% stops logging by design.'},
+    {t:'Whether the SDK version supports exposures',ok:false,fb:'❌ Rollout % first — it\'s the by-design cause.'}]},
+  {q:'5️⃣ Feature looks great behind a targeted gate. You want causal proof before full ship. Best move?',reason:false,
+   opts:[
+    {t:'Convert the gate to an A/B experiment — randomized assignment + Pulse with statistical testing',ok:true,fb:'✅ The graduation pattern: targeting preserved, hypothesis + variants + causal stats added.'},
+    {t:'Raise rollout to 100% and compare against last month',ok:false,fb:'❌ Pre/post comparison is confounded by everything else that changed. Also: exposures stop at 100%.'},
+    {t:'Keep the gate at 50% longer — more data makes it causal',ok:false,fb:'❌ More observational data is still observational. Selection bias doesn\'t wash out with volume — randomize.'}]}]
+};
+let fScore=0,fAns=0;
+function renderQuiz(id){
+  const host=document.getElementById(id);
+  QUIZ[id].forEach((item,qi)=>{
+    const d=document.createElement('div');d.className='q';
+    let h=`<div class="qt">${item.q}</div>`;
+    if(item.reason)h+=`<textarea class="reason" placeholder="💭 Type your reasoning first — explaining before revealing is the single best retention trick (Roediger & Karpicke, 2006)"></textarea>`;
+    d.innerHTML=h;
+    const shuffled=item.opts.map((o,i)=>({o,i})).sort(()=>Math.random()-.5);
+    shuffled.forEach(({o})=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=o.t;
+      b.onclick=()=>{
+        if(d.dataset.done)return; d.dataset.done=1;
+        d.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+        b.classList.add(o.ok?'correct':'wrong');
+        if(!o.ok){d.querySelectorAll('.opt').forEach(x=>{const m=item.opts.find(y=>y.t===x.textContent&&y.ok);if(m)x.classList.add('correct');});}
+        const fb=document.createElement('div');fb.className='fb show '+(o.ok?'good':'bad');fb.textContent=o.fb;d.appendChild(fb);
+        if(id==='quizF'){fAns++; if(o.ok)fScore++;
+          if(fAns===QUIZ.quizF.length){
+            const s=document.getElementById('scorebox');
+            const pass=fScore>=4;
+            s.innerHTML=`${pass?'🎉':'💪'} You scored ${fScore}/5 (${fScore*20}%) — ${pass?'PASSED! Course complete. Next up: Analytics + Session Replay DD 📈':'below the 80% bar. Revisit the flagged units and retake — fall-through and observational-vs-causal are the usual suspects.'}`;
+            s.classList.add('show');
+            if(pass)finishUnit(4);
+          }
+        }
+      };
+      d.appendChild(b);
+    });
+    host.appendChild(d);
+  });
+}
+['quiz1','quiz2','quiz3','quizF'].forEach(renderQuiz);
+</script>
+</body>
+</html>

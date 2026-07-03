@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Analytics Session Replay Deep Dive",
+  "schemaVersion": 1,
+  "description": "Interactive Learn Statsig course: Analytics + Session Replay Deep Dive — 3 units with animated simulators (chart-type picker, auto-populating dashboard, compounding-attrition funnel, control-vs-treatment funnel divergence, lifecycle composition reveal, session replay 30s-buffer timeline, nested targeting-gate check), ELI6 explanations, Amplitude equivalents per concept, per-unit + cumulative quizzes. Sourced from the learn-statsig validated corpus."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics + Session Replay Deep Dive · Learn Statsig</title>
+<style>
+:root { color-scheme: light;
+  --blue:#0052F2; --darkblue:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+  --pink:#FF7D78; --red:#F23845; --ink:#0b1220; --muted:#5b6478;
+  --bg:#f7f8fc; --card:#ffffff; --line:#e5e9f4; --green:#0eaa5e; --amber:#e58a00;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gellix','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:20px 20px 80px}
+.hero{background:linear-gradient(135deg,var(--darkblue) 0%,#3a1f7a 60%,var(--violet) 100%);border-radius:20px;padding:34px 30px;color:#fff;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(255,125,120,.35),transparent 70%)}
+.hero h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.hero p{opacity:.88;margin-top:8px;max-width:660px;font-size:.95rem}
+.pillrow{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 12px;font-size:.75rem}
+.tabs{display:flex;gap:6px;margin:18px 0 22px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:50}
+.tab{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s}
+.tab:hover{border-color:var(--lilac);color:var(--blue)}
+.tab.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(0,82,242,.3)}
+.tab .done{color:var(--green)} .tab.active .done{color:#b8ffd9}
+.panel{display:none;animation:fadeUp .35s ease}
+.panel.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(11,18,32,.04)}
+.card h2{font-size:1.15rem;font-weight:800;color:var(--darkblue);display:flex;align-items:center;gap:8px}
+.card h3{font-size:.98rem;font-weight:700;color:var(--darkblue);margin:16px 0 6px}
+.kicker{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--lilac);margin-bottom:4px}
+.box{border-radius:12px;padding:14px 16px;margin:12px 0;font-size:.9rem}
+.eli6{background:#f2f0ff;border:1px solid #ddd6ff}
+.eli6 .lbl{color:var(--violet)}
+.gotcha{background:#fff7ea;border:1px solid #ffe1b0}
+.gotcha .lbl{color:var(--amber)}
+.amp{background:#eef4ff;border:1.5px solid #a9c4ff}
+.amp .lbl{color:var(--blue)}
+.lbl{font-weight:800;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px}
+code{background:#eef1f8;border-radius:6px;padding:2px 6px;font-size:.83em;color:var(--darkblue)}
+.sim{background:linear-gradient(180deg,#fbfcff,#f3f5fc);border:1.5px dashed var(--lilac);border-radius:14px;padding:18px;margin:14px 0}
+.sim h4{font-size:.85rem;font-weight:800;color:var(--blue);margin-bottom:10px;display:flex;gap:6px;align-items:center}
+.controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:.85rem}
+.controls label{display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer}
+.btn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;font-size:.85rem;cursor:pointer;transition:.15s;font-family:inherit}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,82,242,.35)}
+.btn.ghost{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+input[type=range]{accent-color:var(--blue);width:170px}
+.predict{background:#f0fbff;border:1px solid #bfe9ff;border-radius:12px;padding:14px;margin:12px 0;font-size:.9rem}
+.predict .lbl{color:#0a86b8}
+.reveal{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #bfe9ff}
+.reveal.show{display:block;animation:fadeUp .3s}
+/* chart picker */
+.qbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.qb{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;color:var(--darkblue);transition:.15s;font-family:inherit}
+.qb:hover{border-color:var(--lilac)}
+.qb.on{background:var(--violet);border-color:var(--violet);color:#fff}
+.chartgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.cc{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:.76rem;text-align:center;transition:.3s;opacity:.55}
+.cc b{display:block;font-size:.85rem;color:var(--darkblue);margin-bottom:4px}
+.cc.hit{border-color:var(--green);opacity:1;transform:scale(1.05);box-shadow:0 8px 20px rgba(14,170,94,.2)}
+/* dashboard */
+.dash{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:14px;min-height:120px}
+.dash h5{font-size:.8rem;font-weight:800;color:var(--darkblue);margin-bottom:10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.dcard{background:linear-gradient(135deg,#eef4ff,#f6f2ff);border:1.5px solid #cfdeff;border-radius:10px;padding:10px;font-size:.72rem;font-weight:700;color:var(--darkblue)}
+.dcard.new{animation:cardPop .7s cubic-bezier(.2,1.4,.4,1)}
+.dcard .tag{display:inline-block;background:var(--blue);color:#fff;border-radius:6px;padding:1px 7px;font-size:.62rem;margin-top:6px}
+@keyframes cardPop{0%{transform:scale(0) rotate(-6deg);opacity:0}100%{transform:scale(1);opacity:1}}
+/* funnel bars */
+.fun{display:flex;gap:18px;align-items:flex-end;height:190px;margin:14px 0 4px;padding:0 6px}
+.fstep{flex:1;display:flex;gap:5px;align-items:flex-end;height:100%;position:relative}
+.fbar{flex:1;border-radius:6px 6px 0 0;transition:height 1s cubic-bezier(.2,.8,.2,1);height:0}
+.fbar.c{background:#b9c3dd}
+.fbar.t{background:linear-gradient(180deg,var(--lilac),var(--blue))}
+.flab{display:flex;gap:18px;font-size:.68rem;font-weight:700;color:var(--muted);text-align:center}
+.flab span{flex:1}
+.divg{position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:.62rem;font-weight:800;border-radius:8px;padding:3px 8px;white-space:nowrap;opacity:0;transition:opacity .5s}
+.divg.show{opacity:1;animation:pulseR 1.2s infinite}
+@keyframes pulseR{0%,100%{box-shadow:0 0 0 0 rgba(242,56,69,.4)}50%{box-shadow:0 0 0 8px rgba(242,56,69,0)}}
+.bigpct{font-size:2rem;font-weight:800;color:var(--blue);transition:.3s}
+/* lifecycle */
+.lcgrid{display:flex;gap:10px;align-items:flex-end;height:170px;margin:12px 0 4px}
+.lccol{flex:1;display:flex;flex-direction:column-reverse;height:100%;border-radius:8px;overflow:hidden}
+.seg{transition:height 1s cubic-bezier(.2,.8,.2,1), background .6s}
+.lclab{display:flex;gap:10px;font-size:.68rem;font-weight:700;color:var(--muted);text-align:center}
+.lclab span{flex:1}
+/* replay timeline */
+.tl{position:relative;background:#0b1220;border-radius:12px;padding:26px 16px 40px;margin-top:10px}
+.track{height:14px;background:#25314f;border-radius:8px;position:relative;overflow:visible}
+.buf{position:absolute;top:0;height:100%;background:rgba(255,206,122,.85);border-radius:8px;width:0;transition:width .6s, left .6s;left:0}
+.rec{position:absolute;top:0;height:100%;background:linear-gradient(90deg,var(--green),#3fe08f);border-radius:0 8px 8px 0;width:0;transition:width .1s linear}
+.cursor{position:absolute;top:-8px;width:3px;height:30px;background:#fff;border-radius:2px;left:0;transition:left .1s linear}
+.mark{position:absolute;top:-30px;transform:translateX(-50%);font-size:.68rem;font-weight:800;color:#ffce7a;white-space:nowrap}
+.tlmsg{color:#cfe0ff;font-size:.8rem;margin-top:26px;font-weight:600;min-height:20px}
+.tllegend{display:flex;gap:16px;margin-top:8px;font-size:.7rem;color:#8fa2c9}
+.tllegend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px}
+/* nested gates */
+.nest{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ring{border:2px solid var(--line);border-radius:12px;padding:12px;transition:.3s;background:#fff}
+.ring h6{font-size:.75rem;font-weight:800;color:var(--darkblue);margin-bottom:4px}
+.ring.ok{border-color:var(--green);background:#f2fcf7}
+.ring.no{border-color:var(--red);background:#fdf1f1;opacity:.75}
+.verdict2{font-weight:800;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:.9rem}
+.verdict2.pass{background:#e7f8ef;color:var(--green)}
+.verdict2.fail{background:#fdecec;color:var(--red)}
+/* chain */
+.chain{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:14px 0}
+.chlink{flex:1;min-width:180px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;font-size:.8rem;transition:.4s;opacity:.45}
+.chlink b{display:block;color:var(--darkblue);font-size:.88rem;margin-bottom:4px}
+.chlink.lit{opacity:1;border-color:var(--blue);box-shadow:0 8px 20px rgba(0,82,242,.15);transform:translateY(-3px)}
+/* quiz */
+.q{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.q .qt{font-weight:700;font-size:.92rem;margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;background:#f7f8fc;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;margin:6px 0;font-size:.86rem;cursor:pointer;transition:.15s;font-family:inherit}
+.opt:hover{border-color:var(--lilac)}
+.opt.correct{background:#e7f8ef;border-color:var(--green);font-weight:700}
+.opt.wrong{background:#fdecec;border-color:var(--red)}
+.fb{display:none;font-size:.85rem;border-radius:10px;padding:12px;margin-top:8px}
+.fb.show{display:block;animation:fadeUp .3s}
+.fb.good{background:#e7f8ef;color:#0a6e40}
+.fb.bad{background:#fff7ea;color:#8a5b00}
+.reason{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px;font-size:.85rem;font-family:inherit;margin:6px 0;resize:vertical;min-height:44px}
+.scorebox{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;border-radius:14px;padding:18px;text-align:center;font-weight:800;font-size:1.05rem;margin-top:14px;display:none}
+.scorebox.show{display:block;animation:fadeUp .4s}
+.footer{font-size:.78rem;color:var(--muted);margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+.footer a{color:var(--blue)}
+.next{display:flex;justify-content:flex-end;margin-top:6px}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#fff;font-weight:800;text-decoration:none">4️⃣ Analytics + SR</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+<div class="wrap">
+
+<div class="hero">
+  <h1>📈 See What Moved and Why: Analytics + Session Replay</h1>
+  <p>Pulse tells you a metric moved. This course covers the two questions Pulse can't answer: <b>where</b> in your product it happened (funnels) and <b>why</b> users behaved that way (Session Replay). Every concept comes with 🧒 ELI6 and a 🔵 Amplitude equivalent.</p>
+  <div class="pillrow">
+    <span class="pill">⏱ 20–25 min</span><span class="pill">🧰 Unit 1 · Analytics Layer</span>
+    <span class="pill">🔻 Unit 2 · The Funnel Split</span><span class="pill">🎥 Unit 3 · Session Replay</span>
+    <span class="pill">🏁 Cumulative Quiz</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-t="t0">👋 Start</button>
+  <button class="tab" data-t="t1">1️⃣ Analytics Layer <span class="done" id="d1"></span></button>
+  <button class="tab" data-t="t2">2️⃣ Funnel Split <span class="done" id="d2"></span></button>
+  <button class="tab" data-t="t3">3️⃣ Session Replay <span class="done" id="d3"></span></button>
+  <button class="tab" data-t="t4">🏁 Final Quiz <span class="done" id="d4"></span></button>
+</div>
+
+<!-- ======== START ======== -->
+<div class="panel show" id="t0">
+  <div class="card">
+    <div class="kicker">Course Opening</div>
+    <h2>The three-tool investigation chain 🔎</h2>
+    <div class="chain" id="chain0">
+      <div class="chlink"><b>1. Pulse 📊</b>WHAT moved? Aggregate metric effect with statistical testing.</div>
+      <div class="chlink"><b>2. Funnel split 🔻</b>WHERE in the flow? Group By experiment/gate group, find the divergence step.</div>
+      <div class="chlink"><b>3. Session Replay 🎥</b>WHY? Watch exactly the sessions of the variant that dropped.</div>
+    </div>
+    <button class="btn" onclick="litChain()">▶ Animate the chain</button>
+    <div class="box eli6"><span class="lbl">🧒 ELI6 — the whole course in one story</span>
+      Your lemonade stand sold less today (<b>what</b> — the scoreboard). You notice kids walk up, look at the price sign, and leave (<b>where</b> — the exact step they quit). So you hide behind the tree and watch: turns out the new sign is upside down! 🙃 (<b>why</b> — you had to SEE it).</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      This is Statsig's version of a chain you already demo daily: Amplitude Experiment results → Funnel Analysis chart → jump into Session Replay from the chart of users who dropped. Same investigation, different anchor: Statsig anchors on the <b>experiment/gate exposure</b>; Amplitude anchors on the <b>chart</b>. Keep that contrast in your pocket — it's the theme of all three units.</div>
+    <div class="next"><button class="btn" onclick="go('t1')">Start Unit 1 →</button></div>
+  </div>
+</div>
+
+<!-- ======== UNIT 1 ======== -->
+<div class="panel" id="t1">
+  <div class="card">
+    <div class="kicker">Unit 1 · ~7 min</div>
+    <h2>🧰 Your Post-Ship Analytics Layer: Metrics Explorer</h2>
+    <p style="font-size:.9rem;margin-top:6px">After you ship a gate or conclude an experiment, Pulse gives you the aggregate result. <b>Metrics Explorer</b> gives you everything else: trends, funnels, retention, distributions, and dashboards that maintain themselves.</p>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      You tag all checkout gates/experiments "checkout" and create a dashboard also tagged "checkout." Next week a teammate ships a new checkout experiment without touching your dashboard. How many new charts appear?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>One — automatically.</b> Tag-based auto-populate adds a snapshot card for every new gate/experiment with a matching tag. Try it below. 👇</div>
+    </div>
+
+    <h3>LO1 · Metrics Explorer: five tools, one decision rule 🗂️</h3>
+    <div class="sim">
+      <h4>🎮 Chart picker: click a question, see which tool answers it</h4>
+      <div class="qbtns">
+        <button class="qb" onclick="pick(this,'funnel')">"Where do users quit checkout?"</button>
+        <button class="qb" onclick="pick(this,'ret')">"Did last month's signups come back?"</button>
+        <button class="qb" onclick="pick(this,'dist')">"How many items do people usually buy?"</button>
+        <button class="qb" onclick="pick(this,'drill')">"Why did purchases spike Tuesday?"</button>
+        <button class="qb" onclick="pick(this,'life')">"Is our active base healthy or rotting?"</button>
+      </div>
+      <div class="chartgrid">
+        <div class="cc" id="c_funnel"><b>🔻 Funnels</b>step-by-step conversion</div>
+        <div class="cc" id="c_ret"><b>🔁 Retention</b>did cohort X come back by day N</div>
+        <div class="cc" id="c_dist"><b>📊 Distribution</b>spread of a behavior</div>
+        <div class="cc" id="c_drill"><b>🔬 Metric Drilldown</b>slice one metric till you find the driver</div>
+        <div class="cc" id="c_life"><b>🌱 Lifecycle</b>New / Recurring / Resurrected / Dormant mix</div>
+      </div>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      Metrics Explorer is a toolbox 🧰. Funnel = "where did they stop on the slide?", Retention = "did they come back to the playground?", Distribution = "how many scoops does everyone usually get?", Drilldown = magnifying glass 🔍, Lifecycle = "are these new kids or the same kids coming back?"</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      Close match by chart type: Funnel Analysis, Retention Analysis, Distribution, Segmentation, and Amplitude's Lifecycle/User Composition. Key difference: Statsig's versions are <b>gate/experiment-aware by default</b> — "Group By: experiment group" is first-class. Amplitude Analytics is broader and deeper for product-wide behavioral analysis and segmentation. Rule of thumb: "did MY gate/experiment cause this?" → start in Statsig. "How do users behave across the whole product?" → start in Amplitude.</div>
+
+    <h3>LO2 · Dashboards auto-sync via tagging 🏷️</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: the self-maintaining dashboard</h4>
+      <div class="dash">
+        <h5>📋 Dashboard: "Checkout Health" — tagged <code>checkout</code></h5>
+        <div class="cards" id="dcards">
+          <div class="dcard">🚪 gate: one_click_checkout<br><span class="tag">checkout</span></div>
+          <div class="dcard">🧪 exp: cart_upsell_test<br><span class="tag">checkout</span></div>
+        </div>
+      </div>
+      <div class="steprow" style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" onclick="addCard()">👩‍💻 Teammate ships a new "checkout" experiment</button>
+        <button class="btn ghost" onclick="resetCards()">↺ Reset</button>
+      </div>
+    </div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      Building dashboards by manually adding charts one-by-one = doing it the hard way. The auto-populate needs <b>consistent tagging</b> — the one-time cost is agreeing a tag taxonomy ("checkout", "onboarding", "payments"). After that, the dashboard maintains itself.</div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      It's a magic photo album 📔: any photo you label "beach" jumps into the beach album by itself. You never glue photos in again — you just have to agree with your family what the labels are.</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      Amplitude dashboards are curated — you add charts to them (or let a template scaffold them). There isn't a direct tag-driven auto-populate equivalent for flags/experiments, so this is a genuine Statsig-side differentiator to know about when someone asks "what's different about Statsig's dashboards?"</div>
+
+    <h3>LO3 · Metric Drilldown: find WHICH slice contains the lift 🔬</h3>
+    <p style="font-size:.88rem">One metric over time, sliced by user properties, event properties, time window, and source. Investigation path: time → user segment → event source → compare windows, until you find the slice that contains the entire movement.</p>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      The cookie jar is emptying faster this week 🍪. Drilldown = checking WHEN it empties (after school!), WHICH kid (your brother!), WHERE (kitchen, not lunchbox). You keep slicing until one slice explains everything.</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      This is Segmentation with group-bys and property filters — your bread and butter. The workflow (slice by time, segment, source until the anomaly isolates) is identical; Amplitude adds deeper segmentation and cohort tooling on top.</div>
+
+    <h3>📝 Unit 1 quiz</h3>
+    <div id="quiz1"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(1);go('t2')">Finish Unit 1 → Funnel Split</button></div>
+  </div>
+</div>
+
+<!-- ======== UNIT 2 ======== -->
+<div class="panel" id="t2">
+  <div class="card">
+    <div class="kicker">Unit 2 · ~8 min</div>
+    <h2>🔻 The Funnel Split: Finding WHERE the Effect Happened</h2>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      Your experiment shows a 3% drop in "checkout completed" for treatment. You build a 4-step funnel split by experiment group. The lines diverge at step 3. What does that tell you, and where do you look next?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>The WHERE is isolated:</b> treatment causes drop-off at step 3 specifically — steps 1–2 are unaffected, everything after step 3 is a consequence. Next stop: Session Replay triggered on the treatment assignment, to watch what those users hit at step 3. 👇</div>
+    </div>
+
+    <h3>LO4 · Build funnels from 3–5 DECISION points, not page loads 🪜</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: compounding attrition — why 7-step funnels lie to you</h4>
+      <div class="controls">
+        <label>Steps <input type="range" id="fsteps" min="3" max="8" value="4" oninput="attrition()"> <b id="fstepsv">4</b></label>
+        <label>Per-step conversion <input type="range" id="fconv" min="50" max="95" step="5" value="80" oninput="attrition()"> <b id="fconvv">80%</b></label>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px"><div class="fun" id="attrbars" style="height:140px"></div></div>
+        <div style="text-align:center"><div style="font-size:.72rem;font-weight:700;color:var(--muted)">FINISH THE FUNNEL</div><div class="bigpct" id="finalpct">41%</div></div>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:6px">At 80% per step, a 7-step funnel ends at ~21% — and with 7 candidate steps you can't tell which one is "the problem." Keep it to 3–5 decision events. ✂️</p>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      Every extra hoop loses some kids, even if each hoop is easy. Seven easy hoops in a row and most of the class never gets the prize — and you can't tell which hoop was the annoying one because they ALL leaked a little.</div>
+
+    <h3>LO5 · Split the funnel by experiment group to find the divergence step 🍴</h3>
+    <div class="sim">
+      <h4>🎮 Animation: control vs treatment — spot the divergence</h4>
+      <button class="btn" onclick="runFunnel()">▶ Run the funnel comparison</button>
+      <div class="fun" id="funnel">
+        <div class="fstep" data-c="100" data-t="100"><div class="fbar c"></div><div class="fbar t"></div></div>
+        <div class="fstep" data-c="72" data-t="71"><div class="fbar c"></div><div class="fbar t"></div></div>
+        <div class="fstep" data-c="55" data-t="40"><div class="divg" id="divg">💥 divergence starts here</div><div class="fbar c"></div><div class="fbar t"></div></div>
+        <div class="fstep" data-c="38" data-t="26"><div class="fbar c"></div><div class="fbar t"></div></div>
+      </div>
+      <div class="flab"><span>1 · page load</span><span>2 · add to cart</span><span>3 · checkout started ⚠️</span><span>4 · checkout completed</span></div>
+      <div class="legend" style="display:flex;gap:14px;font-size:.75rem;color:var(--muted);margin-top:8px">
+        <span><i style="width:11px;height:11px;border-radius:3px;background:#b9c3dd;display:inline-block"></i> control</span>
+        <span><i style="width:11px;height:11px;border-radius:3px;background:var(--blue);display:inline-block"></i> treatment</span>
+      </div>
+    </div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      The funnel split is NOT Pulse. Pulse = aggregate effect <b>with statistical testing</b> ("is it real?"). Funnel split = visual step attribution <b>without</b> per-step stats ("where is it?"). A 3% aggregate drop can show up as a 15% drop at one step. Use both, for different questions.</div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      Two lines of kids going through the same obstacle course. They stay side-by-side until the monkey bars — then the blue team suddenly thins out. You haven't proven WHY, but you know exactly WHERE to point the camera. 🎥</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      A Funnel Analysis chart grouped by flag/experiment variant. Same divergence-hunting workflow; in Amplitude you'd then jump straight from the funnel step into Session Replay of the users who dropped — chart-anchored, versus Statsig's exposure-anchored triggers (Unit 3).</div>
+
+    <h3>LO6 · Lifecycle ≠ Retention: "is our user base healthy?" 🌱</h3>
+    <div class="sim">
+      <h4>🎮 Animation: the flat DAU that was secretly rotting</h4>
+      <div class="controls"><button class="btn" onclick="lcReveal()">🔍 Reveal the composition</button><button class="btn ghost" onclick="lcInit(true)">↺ Reset</button></div>
+      <div class="lcgrid" id="lc"></div>
+      <div class="lclab"><span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span></div>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:8px" id="lcmsg">Six weeks of DAU. Looks flat. Looks fine. 😌 …click reveal.</p>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      The class photo has 30 kids every week — same headcount! But look closely: your loyal friends keep leaving, and the seats are filled by kids who quit last year wandering back for a day. Same number, sicker classroom. Retention asks "did MY friends come back?" Lifecycle asks "who's actually IN the room right now?"</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      Near 1:1 with Amplitude's Lifecycle / User Composition chart (Behavior section) — the one from your demo-cert feedback list! 😏 Only label difference: Amplitude may say "Returning" where Statsig says "Resurrected." Same four-state logic: New, Recurring/Current, Resurrected, Dormant.</div>
+
+    <h3>📝 Unit 2 quiz</h3>
+    <div id="quiz2"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(2);go('t3')">Finish Unit 2 → Session Replay</button></div>
+  </div>
+</div>
+
+<!-- ======== UNIT 3 ======== -->
+<div class="panel" id="t3">
+  <div class="card">
+    <div class="kicker">Unit 3 · ~7 min</div>
+    <h2>🎥 Session Replay as Targeted Investigation</h2>
+    <p style="font-size:.9rem;margin-top:6px">You know WHAT dropped and WHERE. Replay answers WHY — but only if it records the sessions that matter. Statsig ties recording directly to gate exposures and experiment assignments.</p>
+
+    <div class="predict"><span class="lbl">🔮 Predict first</span>
+      Your trigger records sessions when a user is assigned to treatment. A user browses for 45 seconds BEFORE being assigned. How many seconds of pre-assignment behavior do you see?
+      <button class="btn ghost" style="margin-top:8px" onclick="this.nextElementSibling.classList.add('show')">Reveal</button>
+      <div class="reveal"><b>30 seconds.</b> Statsig keeps a 30-second rolling buffer before the trigger, so you get the last 30s of context + everything after. Watch it below. 👇</div>
+    </div>
+
+    <h3>LO8 · Conditional triggers + the 30-second rewind buffer ⏪</h3>
+    <div class="sim">
+      <h4>🎬 Animation: a session being captured</h4>
+      <button class="btn" onclick="playTL()">▶ Play the session</button>
+      <div class="tl">
+        <div class="track" id="track">
+          <div class="buf" id="buf"></div>
+          <div class="rec" id="rec"></div>
+          <div class="cursor" id="cur"></div>
+          <div class="mark" id="mark" style="left:45%">🧪 assigned to treatment (t=45s)</div>
+        </div>
+        <div class="tlmsg" id="tlmsg">User lands on the site… browsing… (not recorded yet)</div>
+        <div class="tllegend">
+          <span><i style="background:#25314f"></i>not captured</span>
+          <span><i style="background:#ffce7a"></i>30s rewind buffer 🕰️</span>
+          <span><i style="background:var(--green)"></i>recording 🔴</span>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:.85rem;margin-top:8px"><b>Trigger types:</b> ① individual gate exposure (pass or fail) · ② individual experiment exposure (specific variant) · ③ ALL gate/experiment exposures (needs SDK 3.30.1+) · ④ any specific event.</p>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      It's a dashcam 🚗. It's always quietly remembering the last 30 seconds, but only SAVES the video when something interesting happens (the trigger). So when the "crash" happens, you also get the 30 seconds leading up to it.</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      "Replay records everything — I'll drown in sessions." Nope: conditional triggers mean you record ONLY, say, treatment-variant sessions. You watch exactly the users who dropped at step 3, not the whole library.</div>
+
+    <h3>LO9 · The Global Targeting Gate is the OUTER control 🎛️</h3>
+    <div class="sim">
+      <h4>🎮 Simulator: will this session be recorded?</h4>
+      <div class="controls">
+        <label><input type="checkbox" id="g_target" checked> 🌍 User inside Global Targeting Gate</label>
+        <label><input type="checkbox" id="g_trig" checked> 🧪 Conditional trigger fires</label>
+        <button class="btn" onclick="nestCheck()">▶ Check</button>
+      </div>
+      <div class="nest">
+        <div class="ring" id="ring1"><h6>🌍 Global Targeting Gate — who may EVER be recorded (exclude PII-sensitive segments, internal envs…)</h6></div>
+        <div class="ring" id="ring2" style="margin-left:22px"><h6>🎚️ Global Sampling Rate — % of eligible sessions recorded from session start (default 100%)</h6></div>
+        <div class="ring" id="ring3" style="margin-left:44px"><h6>🧪 Conditional trigger — start recording on this specific exposure/event</h6></div>
+      </div>
+      <div class="verdict2" id="nestv" style="display:none"></div>
+    </div>
+    <div class="box eli6"><span class="lbl">🧒 ELI6</span>
+      Russian dolls 🪆. The outer doll (targeting gate) decides who's even allowed in the game. If someone's outside the outer doll, it doesn't matter how loudly the inner doll (trigger) shouts "record!" — nothing happens.</div>
+    <div class="box gotcha"><span class="lbl">🚨 Gotcha</span>
+      "My trigger is set but 0 sessions recorded!" Check in order: ① is the segment excluded by the Global Targeting Gate? ② is Session Replay initialized/enabled for the project? ③ using the "all exposures" trigger? That needs SDK ≥ 3.30.1. ④ has traffic actually hit the trigger yet?</div>
+    <div class="box amp"><span class="lbl">🔵 Amplitude equivalent</span>
+      Amplitude Session Replay = close match on capability. The difference is the anchor: Statsig SR triggers off <b>gate/experiment exposures</b> (experimentation-first); Amplitude SR integrates with <b>Analytics charts</b> — jump from a funnel straight into replays of users who dropped (analytics-first). Same destination, different front door. Great compare-contrast moment in a demo.</div>
+
+    <h3>📝 Unit 3 quiz</h3>
+    <div id="quiz3"></div>
+    <div class="next"><button class="btn" onclick="finishUnit(3);go('t4')">Finish Unit 3 → Final Quiz</button></div>
+  </div>
+</div>
+
+<!-- ======== FINAL ======== -->
+<div class="panel" id="t4">
+  <div class="card">
+    <div class="kicker">Course Close</div>
+    <h2>🏁 Cumulative Quiz — 5 questions, all units</h2>
+    <p style="font-size:.9rem;margin:8px 0">The workflow one last time: <code>Pulse (what?) → Funnel split by variant (where?) → Session Replay on that variant (why?)</code>. Replay is most powerful when <b>focused</b> — trigger on exactly the variant you care about. Aim for 4/5. 💪</p>
+    <div id="quizF"></div>
+    <div class="scorebox" id="scorebox"></div>
+    <div class="box amp" style="margin-top:16px"><span class="lbl">🔵 Your Amplitude-vs-Statsig cheat sheet</span>
+      Metrics Explorer ↔ Amplitude Analytics charts (Statsig = experiment-aware, Amplitude = broader/deeper) · Tagged auto-populate dashboards ↔ no direct Amplitude equivalent (differentiator!) · Drilldown ↔ Segmentation · Lifecycle ↔ User Composition ("Resurrected" ≈ "Returning") · Statsig SR = exposure-anchored ↔ Amplitude SR = chart-anchored. One line to remember: <b>"did my experiment cause it?" → Statsig; "how does my whole product behave?" → Amplitude.</b></div>
+    <div class="footer">
+      📎 <b>Sources:</b> learn-statsig corpus · <code>courses/04-analytics-session-replay-dd.md</code>, <code>topics/06-product-analytics.md</code>, <code>topics/07-session-replay.md</code> ·
+      <a href="https://docs.statsig.com/product-analytics/overview" target="_blank">Product Analytics overview</a> ·
+      <a href="https://docs.statsig.com/product-analytics/funnels" target="_blank">Funnels with Group By</a> ·
+      <a href="https://docs.statsig.com/session-replay/configure" target="_blank">Session Replay configuration</a><br>
+      ⚠️ AI-generated learning aid — validate specifics against the docs or your SME before using externally.
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+/* tabs + progress (separate storage key from course 1) */
+const tabs=document.querySelectorAll('.tab');
+function go(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  tabs.forEach(t=>t.classList.toggle('active',t.dataset.t===id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+tabs.forEach(t=>t.addEventListener('click',()=>go(t.dataset.t)));
+function finishUnit(n){try{const d=JSON.parse(localStorage.getItem('asrdd')||'{}');d['u'+n]=1;localStorage.setItem('asrdd',JSON.stringify(d));}catch(e){}markDone();}
+function markDone(){try{const d=JSON.parse(localStorage.getItem('asrdd')||'{}');[1,2,3,4].forEach(n=>{const el=document.getElementById('d'+n);if(el)el.textContent=d['u'+n]?'✓':'';});}catch(e){}}
+markDone();
+
+/* chain */
+function litChain(){document.querySelectorAll('#chain0 .chlink').forEach((c,i)=>{c.classList.remove('lit');setTimeout(()=>c.classList.add('lit'),400+i*700);});}
+
+/* chart picker */
+function pick(btn,id){
+  document.querySelectorAll('.qb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.querySelectorAll('.cc').forEach(c=>c.classList.remove('hit'));
+  document.getElementById('c_'+id).classList.add('hit');
+}
+
+/* dashboard */
+const newExps=['🧪 exp: express_pay_cta','🧪 exp: promo_banner_v2','🚪 gate: guest_checkout','🧪 exp: coupon_nudge'];
+let ci=0;
+function addCard(){
+  if(ci>=newExps.length)return;
+  const d=document.createElement('div');d.className='dcard new';
+  d.innerHTML=newExps[ci++]+'<br><span class="tag">checkout</span>✨ auto-added';
+  document.getElementById('dcards').appendChild(d);
+}
+function resetCards(){ci=0;const c=document.getElementById('dcards');while(c.children.length>2)c.removeChild(c.lastChild);}
+
+/* attrition */
+function attrition(){
+  const n=+document.getElementById('fsteps').value, p=+document.getElementById('fconv').value;
+  document.getElementById('fstepsv').textContent=n;
+  document.getElementById('fconvv').textContent=p+'%';
+  const host=document.getElementById('attrbars');host.innerHTML='';
+  let v=100;
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div');s.className='fstep';
+    const b=document.createElement('div');b.className='fbar t';b.style.height='0';
+    s.appendChild(b);host.appendChild(s);
+    const h=v;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.height=h+'%'));
+    v=v*p/100;
+  }
+  document.getElementById('finalpct').textContent=Math.round(v/(p/100))<=100?Math.round(v/(p/100)*1)/1+'%':'';
+  // final = value at last bar
+  document.getElementById('finalpct').textContent=Math.round(v/(p/100))+'%';
+}
+attrition();
+
+/* funnel split */
+function runFunnel(){
+  document.getElementById('divg').classList.remove('show');
+  document.querySelectorAll('#funnel .fstep').forEach((s,i)=>{
+    const c=s.querySelector('.fbar.c'),t=s.querySelector('.fbar.t');
+    c.style.height='0';t.style.height='0';
+    setTimeout(()=>{c.style.height=s.dataset.c+'%';t.style.height=s.dataset.t+'%';},200+i*550);
+  });
+  setTimeout(()=>document.getElementById('divg').classList.add('show'),200+2*550+600);
+}
+
+/* lifecycle */
+const LC=[[10,60,8,22],[11,55,12,22],[10,50,17,23],[11,44,22,23],[10,38,28,24],[11,32,33,24]]; // new,recurring,resurrected,(dormant shown as gap)
+function lcInit(reset){
+  const host=document.getElementById('lc');host.innerHTML='';
+  LC.forEach(w=>{
+    const col=document.createElement('div');col.className='lccol';
+    const total=w[0]+w[1]+w[2];
+    [ [w[0],'#9aa7c7'],[w[1],'#9aa7c7'],[w[2],'#9aa7c7'] ].forEach(([h])=>{
+      const s=document.createElement('div');s.className='seg';s.style.height=(h/78*100)+'%';s.style.background='#9aa7c7';col.appendChild(s);
+    });
+    host.appendChild(col);
+  });
+  if(reset)document.getElementById('lcmsg').textContent='Six weeks of DAU. Looks flat. Looks fine. 😌 …click reveal.';
+}
+function lcReveal(){
+  const cols=document.querySelectorAll('#lc .lccol');
+  const colors=['#3fe08f','#0052F2','#FF7D78'];
+  cols.forEach((col,wi)=>{
+    setTimeout(()=>{col.querySelectorAll('.seg').forEach((s,si)=>s.style.background=colors[si]);},wi*250);
+  });
+  document.getElementById('lcmsg').innerHTML='💚 New &nbsp;·&nbsp; 🔵 <b>Recurring — eroding week over week!</b> &nbsp;·&nbsp; 🩷 Resurrected — propping up the total. Flat DAU, structural rot. Lifecycle catches what Retention and DAU both miss.';
+}
+lcInit();
+
+/* replay timeline */
+let tlTimer=null;
+function playTL(){
+  if(tlTimer)clearInterval(tlTimer);
+  const cur=document.getElementById('cur'),buf=document.getElementById('buf'),rec=document.getElementById('rec'),msg=document.getElementById('tlmsg');
+  let t=0; const TRIG=45, END=100;
+  buf.style.width='0';buf.style.left='0';rec.style.width='0';rec.style.left=TRIG+'%';
+  msg.textContent='User lands on the site… browsing… (not recorded yet)';
+  tlTimer=setInterval(()=>{
+    t+=0.8;
+    cur.style.left=Math.min(t,END)+'%';
+    if(t<TRIG){
+      const start=Math.max(0,t-30);
+      buf.style.left=start+'%';buf.style.width=(t-start)+'%';
+      msg.textContent='🕰️ Rolling 30s buffer following the user… t='+Math.round(t)+'s (still not saved)';
+    }else{
+      buf.style.left=(TRIG-30)+'%';buf.style.width='30%';
+      rec.style.width=Math.min(t-TRIG,END-TRIG)+'%';
+      msg.textContent='🔴 TRIGGER at t=45s! Buffer (t=15s→45s) is SAVED + recording continues… you see 30s of pre-assignment context.';
+    }
+    if(t>=END){clearInterval(tlTimer);tlTimer=null;
+      msg.textContent='✅ Replay saved: 30s pre-assignment buffer + everything after. The first 15s of browsing? Gone — outside the buffer.';}
+  },60);
+}
+
+/* nested gates */
+function nestCheck(){
+  const g=document.getElementById('g_target').checked, tr=document.getElementById('g_trig').checked;
+  const r1=document.getElementById('ring1'),r3=document.getElementById('ring3'),v=document.getElementById('nestv');
+  r1.className='ring '+(g?'ok':'no');
+  document.getElementById('ring2').className='ring '+(g?'ok':'no');
+  r3.className='ring '+(tr?(g?'ok':'no'):'no');
+  v.style.display='block';
+  if(g&&tr){v.className='verdict2 pass';v.textContent='🎥 RECORDED — inside the targeting gate, trigger fired. You\'ll get the 30s buffer + the rest.';}
+  else if(!g&&tr){v.className='verdict2 fail';v.textContent='🚫 NOT recorded — the trigger fired, but the user is OUTSIDE the Global Targeting Gate. Outer control wins. This is the #1 cause of "0 sessions recorded."';}
+  else{v.className='verdict2 fail';v.textContent='🚫 NOT recorded — no trigger fired'+(g?' (user was eligible, though).':' and user is outside the targeting gate anyway.');}
+}
+
+/* quizzes */
+const QUIZ={
+ quiz1:[
+  {q:'🧠 A PM asks: "How is our new checkout feature doing?" It shipped behind a gate 2 weeks ago. Fastest way to see performance without leaving Statsig?',reason:true,
+   opts:[
+    {t:'Metrics Explorer — a tagged dashboard snapshot, or a Metric Drilldown split by gate pass/fail',ok:true,fb:'✅ Right. Metrics Explorer is the post-ship monitoring surface. Pulse is experiment-specific — it doesn\'t exist for a gate that was never converted.'},
+    {t:'Export the events to Amplitude and build a cohort analysis there',ok:false,fb:'❌ You COULD, but it\'s extra work for a gate-specific question — Statsig splits by feature flag group natively. Save Amplitude for product-wide behavioral questions.'},
+    {t:'Look at the Pulse scorecard — same thing as Metrics Explorer',ok:false,fb:'❌ Pulse = experiment scorecard with statistical testing. Metrics Explorer = the broader analytics surface. Different tools, different jobs.'}]},
+  {q:'🏷️ Dashboard tagged "payments" with auto-populate on. Colleague ships a new experiment tagged "payments" next week. What happens?',reason:false,
+   opts:[
+    {t:'The experiment snapshot appears on the dashboard automatically',ok:true,fb:'✅ Zero-maintenance launch monitor — that\'s the payoff of a consistent tag taxonomy.'},
+    {t:'Nothing — auto-populate only works for gates, not experiments',ok:false,fb:'❌ Works for both gates and experiments with a matching tag.'},
+    {t:'You get a notification and approve each addition manually',ok:false,fb:'❌ No approval loop — matching tag = card appears.'}]}],
+ quiz2:[
+  {q:'🧠 Pulse shows treatment −3% on checkout completion (CI excludes zero). Her 4-step funnel split by experiment group: steps 1–2 identical, step 3 treatment drops 15% more. What has she learned, and what\'s next?',reason:true,
+   opts:[
+    {t:'She\'s isolated WHERE — treatment causes drop-off at step 3 specifically. Next: Session Replay triggered on treatment assignment to see what users hit at step 3.',ok:true,fb:'✅ Exactly. Pulse\'s 3% is the aggregate across the whole flow; the funnel localizes it to step 3. Replay is the natural next question.'},
+    {t:'The 15% at step 3 and the 3% in Pulse show the same thing',ok:false,fb:'❌ Different questions! Pulse = is there a real effect (aggregate, stat-tested). Funnel = where does it happen. A small aggregate drop often concentrates as a big drop at one step — exactly what she found.'},
+    {t:'Steps 1–2 identical = no effect there, so re-run the experiment with only step 3 events',ok:false,fb:'❌ No re-run needed — the experiment already told her everything. The funnel is analysis, not a new experiment design.'}]},
+  {q:'🌱 Retention vs Lifecycle — pick the correct pairing of tool → question.',reason:false,
+   opts:[
+    {t:'Retention: "did users from our launch cohort come back by day N?" · Lifecycle: "is our active base growing from new users or lapsed ones returning?"',ok:true,fb:'✅ Retention = cohort came back? Lifecycle = who is IN the base right now (New/Recurring/Resurrected/Dormant). Flat DAU can hide rot only Lifecycle reveals.'},
+    {t:'Retention: current base mix · Lifecycle: did the cohort come back',ok:false,fb:'❌ Swapped! Retention is cohort/time-based comeback; Lifecycle is the composition of your current actives.'},
+    {t:'They\'re interchangeable — both measure comeback rate',ok:false,fb:'❌ Different lenses: Retention follows a cohort forward; Lifecycle classifies today\'s actives into four mutually exclusive states.'}]}],
+ quiz3:[
+  {q:'🧠 She sets a conditional trigger (record on treatment assignment) for the experiment with the step-3 drop… and gets 0 sessions. What should she check?',reason:true,
+   opts:[
+    {t:'① Segment excluded by the Global Targeting Gate? ② Is SR initialized/enabled for the project? ③ SDK ≥ 3.30.1 if using "all exposures"? ④ Has traffic hit the trigger yet?',ok:true,fb:'✅ Right order. The two most common causes: targeting-gate exclusion and SR not initialized — both admin-level settings. Individual experiment-exposure triggers work on any SDK version.'},
+    {t:'Conditional triggers only work on gate exposures, not experiment exposures — the trigger type is wrong',ok:false,fb:'❌ Triggers work for BOTH gate exposures and experiment exposures — that\'s exactly what they\'re designed for.'},
+    {t:'Increase the Global Sampling Rate to 100%',ok:false,fb:'❌ Sampling rate affects record-from-start sessions; the usual 0-sessions culprits are targeting-gate exclusion or SR not being initialized.'}]},
+  {q:'⏪ Trigger fires when users get treatment. A user browses 45s, THEN gets assigned. How much of the session do you see?',reason:false,
+   opts:[
+    {t:'30 seconds pre-assignment (the rolling buffer) + everything after',ok:true,fb:'✅ Dashcam logic: 30s retroactive window + full recording after the trigger. The first 15s are outside the buffer — gone.'},
+    {t:'Only what happens after assignment — recording starts at the trigger',ok:false,fb:'❌ There\'s a 30-second rolling pre-trigger buffer — you get context before the moment, not just after.'},
+    {t:'The whole 45 seconds — capture is retroactive to session start',ok:false,fb:'❌ The buffer is 30 seconds, not unlimited. 45s of browsing → the first 15s are lost.'}]}],
+ quizF:[
+  {q:'1️⃣ "Did users who signed up during last month\'s promo come back within 7 days?" Which Metrics Explorer tool?',reason:false,
+   opts:[
+    {t:'Retention — cohort-based, time-based comeback',ok:true,fb:'✅ Cohort + "came back by day N" = Retention.'},
+    {t:'Lifecycle — it tracks who comes back',ok:false,fb:'❌ Lifecycle classifies your CURRENT active base; it doesn\'t follow a specific cohort forward.'},
+    {t:'Funnel — signup → return is a two-step funnel',ok:false,fb:'❌ Funnels measure progression through flow steps in a journey, not time-based comeback of a cohort.'}]},
+  {q:'2️⃣ What\'s wrong with a 7-step funnel where every step is a page load?',reason:false,
+   opts:[
+    {t:'Attrition compounds across steps (80%⁷ ≈ 21%) and with 7 candidates you can\'t isolate the problem step — use 3–5 decision events',ok:true,fb:'✅ Decision points, not mechanical transitions. Fewer, meaningful steps = attributable drop-offs.'},
+    {t:'Page load events are too high-volume for funnels to process',ok:false,fb:'❌ Not a volume problem — a design problem. Mechanical steps dilute the signal.'},
+    {t:'Nothing — more steps means more detail',ok:false,fb:'❌ More steps = compounding attrition + 7 suspects for one crime. Less is more.'}]},
+  {q:'3️⃣ Funnel split by experiment group vs Pulse — the correct division of labor?',reason:false,
+   opts:[
+    {t:'Pulse = "is the effect real?" (aggregate + stats) · Funnel split = "where in the flow?" (visual step attribution, no per-step stats)',ok:true,fb:'✅ Use both, in that order. The funnel split has no per-step statistical testing — it points, Pulse proves.'},
+    {t:'The funnel split includes statistical testing per step, so it replaces Pulse',ok:false,fb:'❌ No per-step stats on the funnel split — it\'s visual attribution. Pulse carries the statistical weight.'},
+    {t:'Pulse shows where the effect happened step by step',ok:false,fb:'❌ Pulse is aggregate. Step attribution is exactly what it CAN\'T do — that\'s the funnel\'s job.'}]},
+  {q:'4️⃣ A replay trigger fires mid-session. What ends up in the saved replay?',reason:false,
+   opts:[
+    {t:'A 30-second pre-trigger buffer + everything after the trigger',ok:true,fb:'✅ Dashcam rule. Context before the moment, full recording after.'},
+    {t:'Only post-trigger behavior',ok:false,fb:'❌ Don\'t forget the 30s rolling buffer — that pre-trigger context is often where the "why" lives.'},
+    {t:'The full session from the very first pageview',ok:false,fb:'❌ Only if the trigger fired within 30s of session start. The buffer is 30 seconds, not infinite.'}]},
+  {q:'5️⃣ A conditional trigger fires for a user, but they\'re excluded by the Global Targeting Gate. Result?',reason:false,
+   opts:[
+    {t:'Not recorded — the targeting gate is the outer control; triggers operate inside it',ok:true,fb:'✅ Outer doll wins. 🪆 Targeting gate (who may EVER be recorded) → sampling rate → conditional trigger. Exclusion at the outer layer beats everything inside.'},
+    {t:'Recorded — conditional triggers override the targeting gate',ok:false,fb:'❌ Nothing overrides the Global Targeting Gate — it exists precisely to hard-exclude segments (PII-sensitive, internal envs).'},
+    {t:'Recorded, but flagged for review',ok:false,fb:'❌ No review queue — excluded means never captured at all.'}]}]
+};
+let fScore=0,fAns=0;
+function renderQuiz(id){
+  const host=document.getElementById(id);
+  QUIZ[id].forEach((item)=>{
+    const d=document.createElement('div');d.className='q';
+    let h=`<div class="qt">${item.q}</div>`;
+    if(item.reason)h+=`<textarea class="reason" placeholder="💭 Type your reasoning first — explaining before revealing is the best retention trick (Roediger & Karpicke, 2006)"></textarea>`;
+    d.innerHTML=h;
+    const shuffled=item.opts.map(o=>o).sort(()=>Math.random()-.5);
+    shuffled.forEach(o=>{
+      const b=document.createElement('button');b.className='opt';b.textContent=o.t;
+      b.onclick=()=>{
+        if(d.dataset.done)return; d.dataset.done=1;
+        d.querySelectorAll('.opt').forEach(x=>x.disabled=true);
+        b.classList.add(o.ok?'correct':'wrong');
+        if(!o.ok){d.querySelectorAll('.opt').forEach(x=>{const m=item.opts.find(y=>y.t===x.textContent&&y.ok);if(m)x.classList.add('correct');});}
+        const fb=document.createElement('div');fb.className='fb show '+(o.ok?'good':'bad');fb.textContent=o.fb;d.appendChild(fb);
+        if(id==='quizF'){fAns++; if(o.ok)fScore++;
+          if(fAns===QUIZ.quizF.length){
+            const s=document.getElementById('scorebox');
+            const pass=fScore>=4;
+            s.innerHTML=`${pass?'🎉':'💪'} You scored ${fScore}/5 (${fScore*20}%) — ${pass?'PASSED! That\'s the full 4-course track complete. 🏆':'below the 80% bar. The usual suspects: Pulse-vs-funnel division of labor and the outer targeting gate. Revisit + retake!'}`;
+            s.classList.add('show');
+            if(pass)finishUnit(4);
+          }
+        }
+      };
+      d.appendChild(b);
+    });
+    host.appendChild(d);
+  });
+}
+['quiz1','quiz2','quiz3','quizF'].forEach(renderQuiz);
+</script>
+</body>
+</html>

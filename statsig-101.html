@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Statsig 101 Visual Learner",
+  "schemaVersion": 1,
+  "description": "Interactive Statsig 101 Foundational learning hub: build-ship-measure-learn loop, feature gates, experiments, Pulse reading, day-1 traps (flip cards), and a 5-question cumulative quiz with progress tracking. Grounded in the learn-statsig validated corpus."
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statsig 101 — Animated Visual Learner</title>
+<style>
+:root { color-scheme: light;
+  --blue:#0052F2; --dark:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+  --pink:#FF7D78; --red:#F23845; --green:#00A86B; --amber:#F5A623;
+  --bg:#F7F8FC; --card:#FFFFFF; --ink:#0B1023; --muted:#5A627E; --border:#E4E8F5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Gellix','Poppins',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 20px 80px}
+.hero{background:linear-gradient(120deg,var(--dark) 0%,#0A2A7A 60%,var(--blue) 100%);color:#fff;border-radius:20px;padding:32px 30px;margin-bottom:18px}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.hero p{margin-top:8px;color:#C9D6FF;max-width:660px;font-size:14.5px}
+.badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:3px 12px;font-size:12px;margin-bottom:12px}
+.progress{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:16px}
+.pbar{flex:1;height:10px;background:#EAEEFB;border-radius:999px;overflow:hidden}
+.pfill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--violet));border-radius:999px;transition:width .4s}
+.plabel{font-size:12.5px;color:var(--muted);white-space:nowrap;font-weight:600}
+.reset{font-size:11.5px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{border:1.5px solid var(--border);background:var(--card);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s;font-family:inherit}
+.tab:hover{border-color:var(--lilac);color:var(--blue)}
+.tab.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(0,82,242,.25)}
+.panel{display:none;animation:fade .25s ease}
+.panel.show{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px}
+h2{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+h3{font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--dark)}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:6px}
+p{font-size:14px}
+.eli6{background:linear-gradient(135deg,#FFF4F0,#FFF9E8);border:1.5px solid #FFD9C7;border-radius:14px;padding:14px 18px;margin:14px 0}
+.eli6 .tag{font-size:11px;font-weight:800;letter-spacing:.8px;color:#C05621;text-transform:uppercase}
+.eli6 p{margin-top:6px;font-size:13.5px}
+.keyline{background:#EEF3FF;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;font-weight:600;color:var(--dark)}
+.play{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin:8px 6px 8px 0}
+.play:hover{background:#0043C7}
+.play.alt{background:#1A2350;border:1.5px solid #3D4A85}
+.stage{background:#0D1330;border-radius:16px;padding:20px;margin:12px 0;position:relative;overflow:hidden}
+.stage .cap{color:#8FA3E8;font-size:12px;margin-bottom:10px;font-weight:600}
+.verdict{border-radius:12px;padding:11px 15px;font-size:13px;margin-top:10px;background:#1A2350;border:1.5px solid #3D4A85;color:#DCE4FF;min-height:56px}
+.verdict b{color:#fff}
+.flips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0}
+.flip{perspective:900px;height:195px;cursor:pointer}
+.flipin{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.flip.flipped .flipin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;padding:15px;display:flex;flex-direction:column;justify-content:center}
+.face.front{background:#FFF1F1;border:1.5px solid #FFC9C9}
+.face.back{background:var(--dark);color:#fff;transform:rotateY(180deg)}
+.face .lbl{font-size:10.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;margin-bottom:8px}
+.face.front .lbl{color:var(--red)} .face.back .lbl{color:var(--lilac)}
+.face p{font-size:12.5px;line-height:1.45}
+.face .hint{margin-top:auto;font-size:11px;color:var(--muted);text-align:right}
+.face.back .hint{color:#8FA3E8}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{background:var(--dark);color:#fff;text-align:left;padding:9px 12px;font-size:12px}
+th:first-child{border-radius:10px 0 0 0}th:last-child{border-radius:0 10px 0 0}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:#FAFBFF}
+
+/* selection bias lab */
+.groups{display:flex;gap:12px;margin-top:10px}
+.grp{flex:1;border:1.5px dashed #3D4A85;border-radius:12px;padding:10px;min-height:120px}
+.grp h5{color:#C9D6FF;font-size:11.5px;font-weight:800;margin-bottom:8px}
+.crowd{display:flex;flex-wrap:wrap;gap:6px;min-height:60px}
+.person{font-size:20px;opacity:0;transform:scale(.3)}
+.person.in{animation:pop .3s forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+
+/* hash lottery */
+.hashrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.huser{background:#1A2350;border:1.5px solid #3D4A85;border-radius:12px;padding:10px;text-align:center;width:96px;transition:border-color .4s,box-shadow .4s}
+.huser .hu{font-size:22px}
+.huser .hn{color:#C9D6FF;font-size:11px;font-weight:700;margin-top:3px}
+.huser .hv{color:#8FA3E8;font-size:12px;font-weight:800;margin-top:5px;min-height:18px}
+.huser.pass{border-color:var(--green);box-shadow:0 0 12px rgba(0,168,107,.5)}
+.huser.fail{border-color:#5A627E}
+
+/* p-value lab */
+.pgrid{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;margin-top:10px}
+.pcell{aspect-ratio:1;border-radius:3px;background:#1A2350;opacity:.35;transition:background .2s,opacity .2s}
+.pcell.done{opacity:1;background:#3D4A85}
+.pcell.hot{background:var(--amber);box-shadow:0 0 6px rgba(245,166,35,.7)}
+.pmeter{display:flex;align-items:center;gap:12px;margin-top:12px}
+.pmeter .pv{font-size:22px;font-weight:800;color:#fff}
+.pmeter .pd{color:#C9D6FF;font-size:12.5px}
+
+/* CI rain */
+.cirain{position:relative;height:260px;margin-top:8px}
+.truth{position:absolute;top:0;bottom:26px;left:58%;width:2.5px;background:var(--green);box-shadow:0 0 8px rgba(0,168,107,.7)}
+.truth::after{content:'true effect +2.5%';position:absolute;bottom:-22px;left:-42px;font-size:10.5px;color:#7DDBAA;font-weight:700;white-space:nowrap}
+.zline{position:absolute;top:0;bottom:26px;left:38%;width:2px;background:#fff;opacity:.35}
+.zline::after{content:'0%';position:absolute;bottom:-20px;left:-6px;font-size:10px;color:#fff;opacity:.7}
+.cibar2{position:absolute;height:8px;border-radius:999px;background:#5F74D9;opacity:0}
+.cibar2.in{animation:drop .4s forwards}
+.cibar2.miss{background:var(--red)}
+@keyframes drop{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+
+/* peeking wiggle */
+.wiggle{width:100%;height:230px}
+.wpath{fill:none;stroke:#8FA3E8;stroke-width:3;stroke-linecap:round}
+.drawing .wpath{stroke-dasharray:1400;stroke-dashoffset:1400;animation:draw 6s linear forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.stopmark{opacity:0;transition:opacity .5s}
+.stopmark.on{opacity:1}
+
+/* peeker race */
+.race{width:100%;border-collapse:collapse;margin-top:4px}
+.race td,.race th{padding:4px 5px;border:none;font-size:11px;background:transparent}
+.race th{color:#8FA3E8;font-weight:800;text-align:center;background:transparent}
+.race .rn{color:#C9D6FF;font-weight:700;white-space:nowrap}
+.dcell{width:20px;height:20px;border-radius:4px;background:#1A2350;display:inline-block;vertical-align:middle;margin:0 1px;transition:background .25s,box-shadow .25s}
+.dcell.ok{background:#3D4A85}
+.dcell.sig{background:var(--red);box-shadow:0 0 7px rgba(242,56,69,.8)}
+.vcell{font-size:11px;font-weight:800;text-align:center;white-space:nowrap;min-width:86px}
+.vcell.shipbad{color:#FF9AA0}
+.vcell.holdgood{color:#7DDBAA}
+.dayhead{color:#F5A623 !important}
+.scorebar{display:flex;gap:12px;margin-top:12px}
+.scorebox{flex:1;border-radius:12px;padding:12px 14px;text-align:center}
+.scorebox .sv{font-size:22px;font-weight:800}
+.scorebox .sl{font-size:11.5px;margin-top:2px}
+.sb-peek{background:#3A1220;border:1.5px solid var(--red);color:#FFB3B8}
+.sb-pat{background:#0E2E22;border:1.5px solid var(--green);color:#9FE8C4}
+.sb-peek .sv,.sb-pat .sv{color:#fff}
+/* bake bars */
+.bake{display:flex;align-items:flex-end;gap:10px;height:170px;margin-top:10px;padding:0 6px}
+.bk{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bkbar{width:75%;border-radius:8px 8px 0 0;background:var(--lilac);transition:height 1.6s ease,background 1.6s}
+.bklbl{color:#C9D6FF;font-size:10.5px;margin-top:6px;text-align:center}
+.bkemo{font-size:15px;height:22px}
+
+/* quiz */
+.q{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
+.q .qn{font-size:11px;font-weight:800;color:var(--blue);letter-spacing:.7px;text-transform:uppercase}
+.q h4{font-size:14px;margin:8px 0 12px;line-height:1.5}
+.opt{display:block;width:100%;text-align:left;background:#F7F8FD;border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;font-size:13px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:.15s}
+.opt:hover{border-color:var(--lilac)}
+.opt.correct{background:#DFF5E8;border-color:#0A7A44}
+.opt.wrong{background:#FFE3E3;border-color:var(--red)}
+.opt:disabled{cursor:default}
+.expl{display:none;margin-top:10px;border-radius:10px;padding:12px 14px;font-size:13px;background:#EEF3FF;border:1.5px solid #C7D4FF}
+.q.answered .expl{display:block}
+.score{background:linear-gradient(120deg,var(--dark),var(--blue));color:#fff;border-radius:16px;padding:22px;text-align:center;display:none}
+.score.show{display:block}
+.score .big{font-size:34px;font-weight:800}
+.sources{font-size:12px;color:var(--muted)}
+.sources a{color:var(--blue);text-decoration:none}
+@media(max-width:720px){.groups{flex-direction:column}.pgrid{grid-template-columns:repeat(10,1fr)}}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#fff;font-weight:800;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">4️⃣ Analytics + SR</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+<div class="wrap">
+
+<div class="hero">
+  <span class="badge">📚 Statsig 101 · Animated Edition v2 · ~30 min</span>
+  <h1>The Build → Ship → Measure → Learn Loop 🎬</h1>
+  <p>Same course, now with a <b>Stats Lab</b>: every statistical concept gets a moving picture — selection bias, the hashing lottery, what a p-value actually is, what "95% confident" really means, why peeking burns you, and why yesterday's data lies.</p>
+</div>
+
+<div class="progress">
+  <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  <div class="plabel" id="plabel">0 / 6 sections</div>
+  <button class="reset" onclick="resetProgress()">Reset</button>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-p="p1">🔁 The Loop<span id="d-p1"></span></button>
+  <button class="tab" data-p="p2">🚪 Gates<span id="d-p2"></span></button>
+  <button class="tab" data-p="p3">🧬 Stats Lab<span id="d-p3"></span></button>
+  <button class="tab" data-p="p4">📊 Pulse<span id="d-p4"></span></button>
+  <button class="tab" data-p="p5">⚠️ Day-1 Traps<span id="d-p5"></span></button>
+  <button class="tab" data-p="p6">🎯 Quiz<span id="d-p6"></span></button>
+</div>
+
+<!-- ===== P1 THE LOOP ===== -->
+<div class="panel show" id="p1">
+  <div class="card">
+    <h2>🔁 Unit 1 · The Loop &amp; the Big Divide</h2>
+    <p class="sub">Gates ship safely 🚪, experiments measure rigorously 🧪. Here's WHY gate metrics can't prove anything — watch selection bias happen:</p>
+
+    <div class="stage">
+      <div class="cap">🐇 = power users · 🐢 = casual users. Same 12 people, two ways of splitting them:</div>
+      <button class="play alt" onclick="runBias('gate')">▶ Gate targeting split</button>
+      <button class="play" onclick="runBias('exp')">▶ Random assignment split</button>
+      <div class="groups">
+        <div class="grp"><h5 id="gL">GROUP A</h5><div class="crowd" id="cL"></div></div>
+        <div class="grp"><h5 id="gR">GROUP B</h5><div class="crowd" id="cR"></div></div>
+      </div>
+      <div class="verdict" id="biasv">Press a button. Watch who lands where — and whether the comparison is fair.</div>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>You want to know if your new cookie recipe 🍪 is better. If you only give it to your <b>best friends</b> (targeting rule), of course they say it's great — they were already your fans! Only a <b>coin flip</b> decides fairly, because it makes both groups the same <i>before</i> the cookie. That's why: gate metrics = hints, experiment = proof.</p>
+    </div>
+
+    <div class="keyline">💙 Gates: boolean on/off, Pass % ramping (any split, never reshuffles assigned users), kill switch. Experiments: random assignment, JSON variant configs, Allocation % with splits capped 50/50, Pulse scorecard. Sequential tools in one loop — never interchangeable.</div>
+
+    <p style="font-size:13px;color:var(--muted)">🅰️ Fine print from the docs: Statsig does balance the gate's fail group ("Fail – Not in Analysis" bucket) for gate metrics, which helps — but for a ship decision on measured impact, run an experiment. Statsig↔Amplitude term mapping lives in your <b>Concept Map</b> artifact. 🪨</p>
+  </div>
+</div>
+
+<!-- ===== P2 GATES ===== -->
+<div class="panel" id="p2">
+  <div class="card">
+    <h2>🚪 Unit 2 · Ship Safely: Feature Gates</h2>
+    <p class="sub">"I set 1% rollout — why isn't my test account in?" Watch how the lottery actually works:</p>
+
+    <div class="stage">
+      <div class="cap">🎰 The deterministic hashing lottery — 6 users, gate at 30%. Each user's ID hashes to a fixed ticket number (0–99). Under 30 = pass.</div>
+      <div class="hashrow" id="hashrow"></div>
+      <button class="play" onclick="runHash()">▶ Evaluate gate</button>
+      <button class="play alt" onclick="runHash()">🔁 Re-evaluate (same users)</button>
+      <div class="verdict" id="hashv">Run it twice. Notice anything? 🤔</div>
+    </div>
+
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>Every kid gets a <b>permanent raffle number</b> written on their hand 🎟️. The gate says "numbers under 30 win." Same kid, same number, same result — forever (that's <b>deterministic hashing</b>). But you don't get to CHOOSE the numbers — so your test account might just have ticket #87. Want it in anyway? Use an <b>override</b> — the VIP list that skips the raffle. 📝</p>
+    </div>
+
+    <h3>🪪 Name tag vs wristband</h3>
+    <p><b>User ID</b> 🏷️ = logged-in users. <b>Stable ID</b> 🎗️ = anonymous users — SDK-generated, stored on the device (local storage), survives without a login. The trap: using User ID on a pre-login surface makes everyone the same "null" user and the gate silently misbehaves. Pre-auth = Stable ID, always.</p>
+
+    <div class="flips">
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">⚠️ Trap</span><p>"Gate vs Dynamic Config — same thing, right?"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>Gate = <b>on/off switch</b> (do you see it?). Dynamic Config = <b>control panel</b> (JSON: button text, thresholds, weights) — change behavior without a deploy.</p><span class="hint">tap to flip back</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="sources">🖱️ Click around (read-only): <a href="https://console.statsig.com/4TLCtqzctSqusYcQljJLJE/home">Cloud demo</a> · <a href="https://console.statsig.com/3dElKM5STY5EC8SG2zjhK4/home">Warehouse Native demo</a></p>
+  </div>
+</div>
+
+<!-- ===== P3 STATS LAB ===== -->
+<div class="panel" id="p3">
+  <div class="card">
+    <h2>🧬 Unit 3 · The Stats Lab</h2>
+    <p class="sub">The four statistical ideas that make experiments trustworthy — each one animated. Take your time here. 🧪</p>
+
+    <h3>🎲 Lab 1 · What a p-value ACTUALLY is</h3>
+    <p>Your experiment showed treatment winning by <b>+4%</b>. Question: could pure luck do that? Let's run <b>100 fake experiments where NOTHING changed</b> (both arms identical) and see how often luck alone produces a gap ≥ 4%:</p>
+    <div class="stage">
+      <div class="cap">Each square = one "nothing changed" experiment. 🟨 = luck alone produced ≥ +4% anyway.</div>
+      <div class="pgrid" id="pgrid"></div>
+      <div class="pmeter"><div class="pv" id="pv">—</div><div class="pd" id="pd">Press play to run 100 null experiments.</div></div>
+      <button class="play" onclick="runPval()">▶ Run 100 null experiments</button>
+    </div>
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>Your friend flips a coin 10 times and gets 9 heads, then says "I have magic powers!" 🪄 You check: how often does a NORMAL coin give 9+ heads? About 1% of the time. That 1% is the <b>p-value</b> — the chance that boring old luck explains the "magic." Small p = probably not luck. p = 0.05 means luck would only pull this off 5 times in 100.</p>
+    </div>
+
+    <h3>📏 Lab 2 · What "95% confident" really means</h3>
+    <p>A 95% CI is NOT "95% chance the truth is in this bar." It's about the <b>recipe</b>: if you re-ran the experiment many times, the CI recipe would capture the true effect ~19 times out of 20. Watch 20 re-runs:</p>
+    <div class="stage">
+      <div class="cap">Green line = the TRUE effect (+2.5%, normally invisible to you!). Each bar = one experiment's 95% CI.</div>
+      <div class="cirain" id="cirain"><div class="zline"></div><div class="truth"></div></div>
+      <button class="play" onclick="runRain()">▶ Run 20 experiments</button>
+      <div class="verdict" id="rainv">~19 of 20 bars will catch the green line. The unlucky red one? That's the 5% — and you never know which one you got. Humility, statistically enforced. 🙏</div>
+    </div>
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>You throw 20 hula hoops 🪀 at a hidden flag pole. Your throwing technique is good enough that ~19 hoops land around the pole. Any ONE hoop probably rings it — but one of them missed, and you can't tell which. The CI is the hoop, not the pole.</p>
+    </div>
+
+    <h3>👀 Lab 3 · Why peeking burns you</h3>
+    <p>This experiment has <b>NO real effect</b> (p should stay high). Watch what its p-value does day by day anyway — pure noise wiggle:</p>
+    <div class="stage">
+      <div class="cap">The p-value of a NULL experiment over 14 days. Red zone = "significant" (p &lt; 0.05).</div>
+      <svg class="wiggle" id="wsvg" viewBox="0 0 700 230" preserveAspectRatio="none">
+        <rect x="40" y="185" width="640" height="30" fill="rgba(242,56,69,.25)"></rect>
+        <line x1="40" y1="185" x2="680" y2="185" stroke="#F23845" stroke-width="1.5" stroke-dasharray="6 4"></line>
+        <text x="46" y="205" fill="#FF9AA0" font-size="12" font-weight="700">p &lt; 0.05 — "significant!"</text>
+        <text x="46" y="24" fill="#8FA3E8" font-size="12">p = 1.0</text>
+        <polyline class="wpath" id="wpath" points="40,60 90,95 140,70 190,120 240,150 290,192 340,196 390,160 440,110 490,85 540,130 590,95 640,75 680,68"></polyline>
+        <g class="stopmark" id="stopmark">
+          <circle cx="315" cy="194" r="9" fill="#F23845"></circle>
+          <text x="230" y="145" fill="#FF9AA0" font-size="13" font-weight="800">😬 you stopped &amp; shipped here</text>
+          <text x="410" y="52" fill="#7DDBAA" font-size="13" font-weight="800">…but the truth was "no effect" ✋</text>
+        </g>
+      </svg>
+      <button class="play" onclick="runWiggle()">▶ Play 14 days</button>
+    </div>
+    <p>Days 6–7 the noise dipped into the red zone. Peek daily and stop at the first dip → you ship a feature that did <b>nothing</b>.</p>
+
+    <h3>🏀 Lab 3b · Peeker vs Patient — same experiments, different rule</h3>
+    <div class="eli6">
+      <span class="tag">🧒 Explain like I'm 6</span>
+      <p>Two equally good basketball teams play. At SOME point in almost every game, one team is briefly ahead — that's just how games flow. Now imagine you're allowed to <b>end the game the moment your team is ahead</b> 🏀⏱️. You'd "win" most games… even though the teams are equal. That's peeking. The <b>final buzzer</b> (fixed horizon) is what makes the score mean something.</p>
+    </div>
+    <p>Now watch it with experiments. Below are <b>10 experiments where the feature does NOTHING</b> (both arms identical). Each day-cell shows that day's p-value: dark = not significant, 🟥 = dipped under 0.05 <i>by pure noise</i>. Two readers judge the SAME data:</p>
+    <ul style="font-size:13.5px;margin:6px 0 6px 20px">
+      <li>👀 <b>The Peeker</b> checks every day and ships at the first red cell.</li>
+      <li>🧘 <b>The Patient</b> only looks at the final buzzer — day 14.</li>
+    </ul>
+    <div class="stage">
+      <div class="cap">10 null experiments · 14 days · watch the day sweep 👉</div>
+      <div style="overflow-x:auto"><table class="race" id="race"></table></div>
+      <div class="scorebar">
+        <div class="scorebox sb-peek"><div class="sv" id="peekscore">0 / 10</div><div class="sl">👀 Peeker: duds SHIPPED (false positives)</div></div>
+        <div class="scorebox sb-pat"><div class="sv" id="patscore">— </div><div class="sl">🧘 Patient: duds shipped at day-14 buzzer</div></div>
+      </div>
+      <button class="play" onclick="runRace()">▶ Run the 14-day race</button>
+      <div class="verdict" id="racev">Remember: every one of these features does NOTHING. Any "ship" is a mistake.</div>
+    </div>
+    <p>🧯 Same data, same experiments — the only difference was the <b>stopping rule</b>. Fixes: pre-commit to a duration (<b>sample needed per arm ÷ daily traffic = days</b>, via the power analysis in setup) and only judge at the buzzer; or enable <b>Sequential Testing</b> (Setup → Frequentist → Analysis Settings, toggleable mid-run) — it widens early CIs ("wings") so checking early stays honest, at the cost of needing stronger evidence to call it early.</p>
+
+    <h3>📝 Lab 4 · The hypothesis + metric tiers (the boring-but-vital bit)</h3>
+    <table>
+      <tr><th>Piece</th><th>Job</th><th>ELI6 🧒</th></tr>
+      <tr><td><b>Hypothesis</b> (Action + Predicted Outcome + Rationale)</td><td>Commit BEFORE you look, or you'll rationalize anything after</td><td>Call your shot before you kick 🥅</td></tr>
+      <tr><td><b>🥇 Primary metric</b> (exactly ONE)</td><td>Gets the statistical test; drives the decision</td><td>The one race you bet on</td></tr>
+      <tr><td><b>🔍 Secondary</b></td><td>Explains HOW the primary moved</td><td>Replay camera</td></tr>
+      <tr><td><b>🚧 Guardrails</b></td><td>Catch hidden costs elsewhere</td><td>Don't break grandma's vase</td></tr>
+    </table>
+    <div class="keyline">🎯 10 primary metrics at α=0.05 ≈ 0.5 false wins by pure chance even if NOTHING moved (that's Lab 1 in action). One primary. That's the rule.</div>
+  </div>
+</div>
+
+<!-- ===== P4 PULSE ===== -->
+<div class="panel" id="p4">
+  <div class="card">
+    <h2>📊 Unit 4 · Learn: Reading Pulse</h2>
+    <p class="sub">Three concepts trip up every new reader: participation, the CI-zero rule, bake windows.</p>
+
+    <h3>💌 Participation ≠ assignment</h3>
+    <p><b>Assigned</b> (Diagnostics "exposures") = invited to the party. <b>Participated</b> = showed up AND danced 🕺 (fired the qualifying metric event <i>after</i> exposure). Only participants count in the metric math. 28,000 exposures with 3,200 participants isn't broken — it's a normal event-fire rate. <i>(Want the animated dots version? It's in your Reading Results artifact, Unit 2.)</i></p>
+
+    <h3>⏳ Bake windows — watch yesterday's data finish cooking</h3>
+    <div class="stage">
+      <div class="cap">A daily metric chart. The newest days LOOK collapsed… until the data bakes.</div>
+      <div class="bake" id="bake"></div>
+      <button class="play" onclick="runBake()">▶ Let it bake (24–48h)</button>
+      <div class="verdict" id="bakev">The last 24–48h of any metric chart is still processing. "It dropped to zero this morning!" 😱 → 🎂 no, it's just raw. Never report on unbaked data.</div>
+    </div>
+
+    <h3>📏 The CI-zero reading rule</h3>
+    <table>
+      <tr><th>Pulse shows</th><th>Meaning</th><th>Call</th></tr>
+      <tr><td>CI [+1.1%, +4.6%]</td><td>Whole range positive — direction is trustworthy</td><td>✅ Real win</td></tr>
+      <tr><td>CI [−1.2%, +4.8%]</td><td>Could be up, flat, or down — Lab 2's hoop still includes zero</td><td>🤷 Keep running</td></tr>
+      <tr><td>CI [−4.9%, −0.8%]</td><td>Whole range negative</td><td>❌ Real loss</td></tr>
+    </table>
+    <div class="keyline">📐 The rule: if the CI crosses zero, don't trust the direction. A positive point estimate inside a zero-crossing CI is a forecast of "−1°C to +5°C" — you still don't know if you need a jacket. 🌦️</div>
+
+    <p style="font-size:13px;color:var(--muted)">🅰️ Ampliteer decoder: Statsig "exposures" ≈ Amplitude "assignment"; participation has no direct Amplitude twin; exposure-logging maps to Amplitude's exposure event. Full table in your Concept Map artifact.</p>
+  </div>
+</div>
+
+<!-- ===== P5 TRAPS ===== -->
+<div class="panel" id="p5">
+  <div class="card">
+    <h2>⚠️ Unit 5 · The 5 Day-1 Traps</h2>
+    <p class="sub">Tap each card — trap on the front, reality on the back.</p>
+    <div class="flips">
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">Trap 1 · 🏁 Race condition</span><p>"checkGate() returns false — Statsig is broken!"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>You asked <b>before the SDK finished initializing</b> → "Uninitialized" → default false. Await SDK-ready first. Your bug. 😉</p><span class="hint">tap back</span></div>
+        </div>
+      </div>
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">Trap 2 · 💯 100% rollout</span><p>"Gate at 100% but gate metrics show nothing!"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>Metrics need pass <b>AND</b> fail groups. At 100% there's no fail group → no comparison → no lift. Expected.</p><span class="hint">tap back</span></div>
+        </div>
+      </div>
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">Trap 3 · 📉 Exposure logs gone</span><p>"Exposure events stopped hitting our warehouse!"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>At <b>0% or 100%</b> there's nothing to compare, so logging stops — by design.</p><span class="hint">tap back</span></div>
+        </div>
+      </div>
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">Trap 4 · ⚖️ SRM flag</span><p>"Sample Ratio Mismatch… probably just bad luck?"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>Usually <b>non-random</b>: crash-before-exposure, conditional logging, bots. Check the <b>SRM p-value time series</b> (trending to 0 = real bug), debug, fix, <b>restart</b>. Don't read the scorecard first.</p><span class="hint">tap back</span></div>
+        </div>
+      </div>
+      <div class="flip" onclick="this.classList.toggle('flipped')">
+        <div class="flipin">
+          <div class="face front"><span class="lbl">Trap 5 · 🕺 Low participation</span><p>"Only a fraction of assigned users participate — broken!"</p><span class="hint">tap 👆</span></div>
+          <div class="face back"><span class="lbl">✅ Reality</span><p>Participation ≪ assignment is <b>normal</b> when the metric event is rare. Invited ≠ danced. 💌→🕺</p><span class="hint">tap back</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== P6 QUIZ ===== -->
+<div class="panel" id="p6">
+  <div class="card" style="margin-bottom:14px">
+    <h2>🎯 Cumulative Quiz</h2>
+    <p class="sub">5 scenarios. The Stats Lab should make these feel easy now. 💪</p>
+  </div>
+  <div id="quiz"></div>
+  <div class="score" id="scorecard"><div class="big" id="scoretext"></div><p id="scoremsg" style="margin-top:6px;color:#C9D6FF"></p></div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">📚 Sources & what's next</h3>
+  <p class="sources">
+    Grounded in the validated <b>Statsig 101 Foundational</b> course (LXD corpus), doc-validated 3 Jul 2026 ·
+    <a href="https://docs.statsig.com/guides/featureflags-or-experiments">Gates vs Experiments</a> ·
+    <a href="https://docs.statsig.com/feature-flags/overview">Feature Flags</a> ·
+    <a href="https://docs.statsig.com/experiments/advanced-setup/sequential-testing">Sequential testing</a> ·
+    <a href="https://docs.statsig.com/experiments/monitoring/srm">Managing SRM</a> ·
+    <a href="https://docs.statsig.com/metrics/pulse">Pulse metrics</a> ·
+    <a href="https://docs.statsig.com/client/javascript-sdk-stable-id">Stable ID</a>
+    <br>Next: your <b>Reading Results</b> artifact (course 2) and the <b>Concept Map</b> (Statsig↔Amplitude).
+  </p>
+</div>
+
+</div>
+
+<script>
+// ---------- progress ----------
+var LS='statsig101-progress';
+function getP(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return{}}}
+function setP(p){localStorage.setItem(LS,JSON.stringify(p));renderP()}
+function renderP(){
+  var p=getP(),n=0;
+  ['p1','p2','p3','p4','p5','p6'].forEach(function(k){
+    var el=document.getElementById('d-'+k);
+    if(p[k]){n++;el.textContent=' ✅'}else{el.textContent=''}
+  });
+  document.getElementById('pfill').style.width=(n/6*100)+'%';
+  document.getElementById('plabel').textContent=n+' / 6 sections'+(n===6?' 🎉':'');
+}
+function markDone(k){var p=getP();if(!p[k]){p[k]=1;setP(p)}}
+function resetProgress(){localStorage.removeItem(LS);location.reload()}
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('show')});
+    t.classList.add('active');document.getElementById(t.dataset.p).classList.add('show');
+    if(t.dataset.p!=='p6')markDone(t.dataset.p);
+  });
+});
+markDone('p1');
+
+// ---------- selection bias lab ----------
+var PEOPLE=['🐇','🐢','🐇','🐢','🐢','🐇','🐢','🐇','🐢','🐢','🐇','🐢'];
+function runBias(mode){
+  var L=document.getElementById('cL'),R=document.getElementById('cR');
+  L.innerHTML='';R.innerHTML='';
+  var v=document.getElementById('biasv');
+  if(mode==='gate'){
+    document.getElementById('gL').textContent='PASS — "power users" targeting rule';
+    document.getElementById('gR').textContent='FAIL — everyone else';
+    v.innerHTML='Splitting…';
+    PEOPLE.forEach(function(e,i){
+      setTimeout(function(){
+        var s=document.createElement('div');s.className='person in';s.textContent=e;
+        (e==='🐇'?L:R).appendChild(s);
+      },i*180);
+    });
+    setTimeout(function(){
+      v.innerHTML='🚨 <b>Look at the groups:</b> Pass = all 🐇 power users, Fail = all 🐢 casuals. The pass group was going to retain better <b>with or without your feature</b>. Comparing them proves nothing about the feature — that\'s <b>selection bias</b>.';
+    },PEOPLE.length*180+300);
+  }else{
+    document.getElementById('gL').textContent='TREATMENT — coin flip 🪙';
+    document.getElementById('gR').textContent='CONTROL — coin flip 🪙';
+    v.innerHTML='Flipping coins…';
+    var flips=[0,1,0,1,1,0,1,0,0,1,0,1];
+    PEOPLE.forEach(function(e,i){
+      setTimeout(function(){
+        var s=document.createElement('div');s.className='person in';s.textContent=e;
+        (flips[i]===0?L:R).appendChild(s);
+      },i*180);
+    });
+    setTimeout(function(){
+      v.innerHTML='✅ <b>Both groups got a similar 🐇/🐢 mix.</b> The ONLY difference between them now is your feature — so any metric gap must be <i>caused</i> by it. Random assignment is the whole magic of experiments.';
+    },PEOPLE.length*180+300);
+  }
+}
+
+// ---------- hash lottery ----------
+var HUSERS=[['🧑','alice',12],['🧑‍🦱','bob',87],['🧕','cara',29],['👨‍🦱','dev',54],['👩‍🦰','emi',3],['🧔','fahd',71]];
+var hr=document.getElementById('hashrow');
+HUSERS.forEach(function(u,i){
+  var d=document.createElement('div');d.className='huser';d.id='hu'+i;
+  d.innerHTML='<div class="hu">'+u[0]+'</div><div class="hn">'+u[1]+'</div><div class="hv" id="hv'+i+'">?</div>';
+  hr.appendChild(d);
+});
+var hashRuns=0;
+function runHash(){
+  hashRuns++;
+  HUSERS.forEach(function(u,i){
+    var el=document.getElementById('hu'+i),hv=document.getElementById('hv'+i);
+    el.classList.remove('pass','fail');hv.textContent='🎲';
+    setTimeout(function(){
+      hv.textContent='#'+u[2]+(u[2]<30?' ✅':' ❌');
+      el.classList.add(u[2]<30?'pass':'fail');
+    },400+i*260);
+  });
+  setTimeout(function(){
+    document.getElementById('hashv').innerHTML=hashRuns===1?
+      '🎟️ alice(#12), cara(#29), emi(#3) pass — under 30. Now press <b>Re-evaluate</b>…':
+      '🔁 <b>Identical result.</b> Same user + same gate config = same hash = same outcome, every single time. That\'s deterministic hashing — the "1%" is a fixed lottery, not a rotating door. Your test account at #87? Use an <b>override</b>.';
+  },400+HUSERS.length*260+200);
+}
+
+// ---------- p-value lab ----------
+var pg=document.getElementById('pgrid');
+for(var i=0;i<100;i++){var c=document.createElement('div');c.className='pcell';pg.appendChild(c)}
+function runPval(){
+  var cells=pg.children,hot=0,done=0;
+  for(var i=0;i<100;i++){cells[i].className='pcell'}
+  document.getElementById('pv').textContent='…';
+  document.getElementById('pd').textContent='Running null experiments…';
+  var hotIdx={};while(Object.keys(hotIdx).length<4){hotIdx[Math.floor(Math.random()*100)]=1}
+  for(var i=0;i<100;i++){
+    (function(i){setTimeout(function(){
+      cells[i].classList.add('done');
+      if(hotIdx[i]){cells[i].classList.add('hot');hot++}
+      done++;
+      if(done===100){
+        document.getElementById('pv').textContent='p ≈ 0.0'+hot;
+        document.getElementById('pd').innerHTML='<b>'+hot+' of 100</b> nothing-changed experiments produced ≥ +4% by luck alone. So if YOUR experiment shows +4%… there\'s a ~'+hot+'% chance it\'s just this kind of luck. That percentage <b>is the p-value</b>. Below 0.05 → we call it "statistically significant."';
+      }
+    },i*35)})(i);
+  }
+}
+
+// ---------- CI rain ----------
+function runRain(){
+  var r=document.getElementById('cirain');
+  r.querySelectorAll('.cibar2').forEach(function(b){b.remove()});
+  // truth at left 58%, zero at 38%. scale: 1% = 8% width. bars centered near truth mostly covering it.
+  var bars=[];
+  for(var i=0;i<20;i++){
+    var center=58+(Math.random()*16-8); // +/- 1%-ish
+    var half=7+Math.random()*6;
+    bars.push({l:center-half,w:half*2,miss:false});
+  }
+  // force exactly one clean miss
+  bars[13]={l:24,w:26,miss:true};
+  bars.forEach(function(b,i){
+    (function(b,i){setTimeout(function(){
+      var d=document.createElement('div');d.className='cibar2 in'+(b.miss?' miss':'');
+      d.style.top=(6+i*11)+'px';d.style.left=b.l+'%';d.style.width=b.w+'%';
+      r.appendChild(d);
+    },i*220)})(b,i);
+  });
+  setTimeout(function(){
+    document.getElementById('rainv').innerHTML='🎯 <b>19 blue bars caught the green truth line; 1 red bar missed.</b> That\'s what "95% confidence" means — it\'s the hit-rate of the METHOD across repeats, not a 95% guarantee for your one bar. And in real life the green line is invisible… so respect the humility.';
+  },20*220+400);
+}
+
+// ---------- wiggle ----------
+function runWiggle(){
+  var svg=document.getElementById('wsvg');
+  var sm=document.getElementById('stopmark');sm.classList.remove('on');
+  svg.classList.remove('drawing');void svg.getBoundingClientRect();
+  svg.classList.add('drawing');
+  setTimeout(function(){sm.classList.add('on')},3100);
+}
+
+// ---------- peeker vs patient race ----------
+// 10 null experiments x 14 days. true = p dipped <0.05 that day (noise). Day-14 all non-sig.
+var RACE=[
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,0,0,0,1,1,0,0,0,0,0,0,0],   // dips day 6-7
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,1,0,0,0,0,0,0,0,0,0,0,0],   // dips day 3
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,0,0,0,0,0,0,0,0,0,1,0,0],   // dips day 12
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+ [0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+];
+var raceEl=document.getElementById('race');
+function buildRace(){
+  raceEl.innerHTML='';
+  var hd='<tr><th></th>';
+  for(var d=1;d<=14;d++)hd+='<th id="dh'+d+'">'+d+'</th>';
+  hd+='<th>👀 Peeker</th><th>🧘 Patient</th></tr>';
+  raceEl.innerHTML=hd;
+  RACE.forEach(function(row,i){
+    var tr=document.createElement('tr');
+    var h='<td class="rn">Exp '+(i+1)+'</td>';
+    for(var d=0;d<14;d++)h+='<td><span class="dcell" id="rc'+i+'_'+d+'"></span></td>';
+    h+='<td class="vcell" id="pk'+i+'"></td><td class="vcell" id="pt'+i+'"></td>';
+    tr.innerHTML=h;raceEl.appendChild(tr);
+  });
+}
+buildRace();
+function runRace(){
+  buildRace();
+  var shipped={},peekCount=0;
+  document.getElementById('peekscore').textContent='0 / 10';
+  document.getElementById('patscore').textContent='—';
+  document.getElementById('racev').innerHTML='Day sweep running… every red cell is pure noise.';
+  for(var d=0;d<14;d++){
+    (function(d){setTimeout(function(){
+      for(var dd=1;dd<=14;dd++)document.getElementById('dh'+dd).classList.toggle('dayhead',dd===d+1);
+      RACE.forEach(function(row,i){
+        var c=document.getElementById('rc'+i+'_'+d);
+        c.classList.add(row[d]?'sig':'ok');
+        if(row[d]&&!shipped[i]){
+          shipped[i]=1;peekCount++;
+          var pk=document.getElementById('pk'+i);
+          pk.textContent='🚀 SHIPPED d'+(d+1)+'!';pk.classList.add('shipbad');
+          document.getElementById('peekscore').textContent=peekCount+' / 10';
+        }
+      });
+      if(d===13){
+        RACE.forEach(function(row,i){
+          var pt=document.getElementById('pt'+i);
+          pt.textContent='✋ hold';pt.classList.add('holdgood');
+          var pk=document.getElementById('pk'+i);
+          if(!shipped[i]){pk.textContent='✋ hold';pk.classList.add('holdgood')}
+        });
+        document.getElementById('patscore').textContent='0 / 10';
+        document.getElementById('racev').innerHTML='🏀 <b>Final buzzer.</b> Same 10 do-nothing experiments: the Patient shipped <b>0</b> duds (day-14 p-values were all honest). The Peeker shipped <b>3</b> — a 30% false-positive rate, from a rule that was supposed to give 5%. The features never changed. Only the <b>looking rule</b> did.';
+      }
+    },600+d*650)})(d);
+  }
+}
+
+// ---------- bake ----------
+var BAKED=[62,74,68,81,77]; // first 5 days full
+var bakeEl=document.getElementById('bake');
+function buildBake(){
+  bakeEl.innerHTML='';
+  var days=['Mon','Tue','Wed','Thu','Fri','Sat ⏳','Sun ⏳'];
+  var h=[62,74,68,81,77,24,6];
+  days.forEach(function(d,i){
+    var col=document.createElement('div');col.className='bk';
+    col.innerHTML='<div class="bkemo" id="be'+i+'">'+(i>4?'⏳':'')+'</div><div class="bkbar" id="bb'+i+'" style="height:'+h[i]+'%"></div><div class="bklbl">'+d+'</div>';
+    bakeEl.appendChild(col);
+  });
+}
+buildBake();
+function runBake(){
+  buildBake();
+  setTimeout(function(){
+    document.getElementById('bb5').style.height='79%';document.getElementById('bb5').style.background='#00A86B';
+    document.getElementById('bb6').style.height='72%';document.getElementById('bb6').style.background='#00A86B';
+    document.getElementById('be5').textContent='🎂';document.getElementById('be6').textContent='🎂';
+    document.getElementById('bakev').innerHTML='🎂 <b>Baked!</b> Saturday and Sunday weren\'t down — the events just hadn\'t finished processing. This is why you never report on the most recent 24–48h and why "the metric died this morning" tickets are usually nothing.';
+  },700);
+}
+
+// ---------- quiz ----------
+var QS=[
+ {q:"A PM says: \"Gate metrics show +12% retention for the pass group vs fail — ship to everyone!\" What's missing?",
+  opts:["Nothing — +12% is strong regardless of collection method",
+        "Gate metrics aren't causal: the pass group met a targeting rule, so the groups differed BEFORE the feature (selection bias). A randomized experiment is needed for a ship decision.",
+        "Gate metrics are always meaningless and should never be looked at"],
+  c:1,e:"🐇🐢 That's the selection-bias animation: all-rabbits vs all-turtles. Only the coin flip makes groups comparable."},
+ {q:"Your test account isn't in the 1% rollout. Why, and what's the fix?",
+  opts:["The rollout is a fixed deterministic lottery — your account's hash just isn't under the threshold. Fix: add an override.",
+        "The SDK is stale — reinstall it and the account will enter the 1%",
+        "1% rollouts exclude internal accounts automatically for safety"],
+  c:0,e:"🎟️ Same user, same number, same result forever. Overrides are the VIP list."},
+ {q:"In the p-value lab, 4 of 100 'nothing changed' experiments showed ≥ +4% by luck. What does p ≈ 0.04 mean for YOUR +4% result?",
+  opts:["There's a 96% chance your feature caused exactly +4% lift",
+        "If nothing had changed, luck alone would produce a gap this big ~4% of the time — so it's probably not luck, and we call it statistically significant.",
+        "The experiment needs exactly 100 more users to confirm"],
+  c:1,e:"🎲 The p-value is the 'could boring luck do this?' rate. It is NOT the probability your effect size is exact."},
+ {q:"In the CI rain, 1 of 20 bars missed the true effect. So what does a 95% CI on YOUR scorecard mean?",
+  opts:["There's a 95% probability the truth sits at the center of your bar",
+        "Your bar definitely contains the truth because most bars do",
+        "The CI recipe captures the truth in ~19 of 20 repeated experiments — yours is probably one of them, but you can't know for sure. And if it crosses zero, don't trust the direction."],
+  c:2,e:"🪀 The hoop usually rings the pole — but one hoop missed and nobody knows which. Zero-crossing CI = direction unknown."},
+ {q:"An engineer checks Pulse daily, sees p=0.03 on day 8 of 14, stops and ships. The wiggle-line lab says…?",
+  opts:["Valid — a significant result is a significant result whenever it appears",
+        "Null experiments' p-values wiggle into the red zone by chance. Stopping at the first dip inflates false positives (~30% at 7 peeks). Pre-commit the duration or use Sequential Testing.",
+        "The problem is the experiment should have run 21 days"],
+  c:1,e:"👀 The wiggle dipped at day 6–7 with NO real effect behind it. Fixed horizon = one look at the end; sequential testing = honest repeated looks."}
+];
+var quizEl=document.getElementById('quiz'),answered={},correct=0;
+QS.forEach(function(item,i){
+  var d=document.createElement('div');d.className='q';
+  var h='<div class="qn">Question '+(i+1)+' of '+QS.length+'</div><h4>'+item.q+'</h4>';
+  item.opts.forEach(function(o,j){h+='<button class="opt" data-i="'+i+'" data-j="'+j+'">'+String.fromCharCode(65+j)+'. '+o+'</button>'});
+  h+='<div class="expl">'+item.e+'</div>';
+  d.innerHTML=h;quizEl.appendChild(d);
+});
+quizEl.addEventListener('click',function(ev){
+  var b=ev.target.closest('.opt');if(!b)return;
+  var i=+b.dataset.i,j=+b.dataset.j;
+  if(answered[i]!==undefined)return;
+  answered[i]=j;
+  var q=b.closest('.q');q.classList.add('answered');
+  q.querySelectorAll('.opt').forEach(function(o){
+    o.disabled=true;
+    if(+o.dataset.j===QS[i].c)o.classList.add('correct');
+    else if(+o.dataset.j===j)o.classList.add('wrong');
+  });
+  if(j===QS[i].c)correct++;
+  if(Object.keys(answered).length===QS.length){
+    var sc=document.getElementById('scorecard');sc.classList.add('show');
+    document.getElementById('scoretext').textContent=correct+' / '+QS.length+(correct===QS.length?' 🏆':correct>=4?' 🎉':' 💪');
+    document.getElementById('scoremsg').textContent=correct>=4?'The stats finally clicked, didn\'t they. Gates ship safely, experiments measure rigorously.':'Replay the labs for the ones you missed — especially Lab 1 and Lab 3 — then reset and try again.';
+    markDone('p6');sc.scrollIntoView({behavior:'smooth'});
+  }
+});
+renderP();
+</script>
+</body>
+</html>
