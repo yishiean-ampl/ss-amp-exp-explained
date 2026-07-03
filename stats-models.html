@@ -74,7 +74,7 @@
 
 <div class="hero">
   <h1>📊 Statsig vs Amplitude Experiment<br>The Statistical Models, Animated</h1>
-  <p>Eight stats concepts every SC should be able to explain on a call — each with an ELI5, an animated visual, and a worked example from <b>AmpliBeauty 💄</b>, a fictional beauty e-commerce brand.</p>
+  <p>Eight stats concepts every SC should be able to explain on a call — each with an ELI6, an animated visual, and a worked example from <b>AmpliBeauty 💄</b>, a fictional beauty e-commerce brand.</p>
   <div class="tags"><span class="tag">CUPED</span><span class="tag">Winsorization</span><span class="tag">T-Test</span><span class="tag">Bonferroni</span><span class="tag">Sequential</span><span class="tag">SPRT</span><span class="tag">Bayesian</span><span class="tag">SRM</span></div>
 </div>
 
@@ -103,7 +103,7 @@
 <div class="card" id="ttest">
   <h3>📐 T-Test (and Z-Test)</h3>
   <div class="chips"><span class="chip ss">Statsig: default engine (z-test, Welch's t for small n)</span><span class="chip am">Amplitude: Welch's T-test (fixed-horizon option)</span></div>
-  <div class="eli5"><b>ELI5:</b> You and your friend each have a bag of cookies, and yours look bigger. But are they <i>really</i> bigger — or did you just happen to grab a big one? The T-test is the referee who checks ALL the cookies in both bags and rules: <b>"yes, truly bigger"</b> or <b>"nah, same-ish, you got lucky."</b> The bigger the difference and the more alike the cookies in each bag, the easier the call.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> You and your friend each have a bag of cookies, and yours look bigger. But are they <i>really</i> bigger — or did you just happen to grab a big one? The T-test is the referee who checks ALL the cookies in both bags and rules: <b>"yes, truly bigger"</b> or <b>"nah, same-ish, you got lucky."</b> The bigger the difference and the more alike the cookies in each bag, the easier the call.</div>
   <div class="anim">
     <canvas id="cv-ttest" height="240"></canvas>
     <div class="bar"><button class="play" onclick="ttestPlay()">▶ Replay</button>
@@ -121,7 +121,7 @@
 <div class="card" id="cuped">
   <h3>🎧 CUPED (Variance Reduction)</h3>
   <div class="chips"><span class="chip ss">Statsig: CUPED + CURE (Warehouse Native)</span><span class="chip am">Amplitude: CUPED (advanced settings)</span></div>
-  <div class="eli5"><b>ELI5:</b> Kids run a race to test new shoes. Problem: some kids are just naturally fast, so it's hard to tell if the shoes did anything. CUPED's trick: check how fast each kid ran <i>last week</i>, then ask one simple question — <b>did they beat their own usual speed?</b> Once everyone is compared to themselves, the shoes' real effect pops out much faster.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> Kids run a race to test new shoes. Problem: some kids are just naturally fast, so it's hard to tell if the shoes did anything. CUPED's trick: check how fast each kid ran <i>last week</i>, then ask one simple question — <b>did they beat their own usual speed?</b> Once everyone is compared to themselves, the shoes' real effect pops out much faster.</div>
   <div class="anim">
     <canvas id="cv-cuped" height="240"></canvas>
     <div class="bar"><button class="play" onclick="cupedPlay()">▶ Apply CUPED</button><button class="play ghost" onclick="cupedReset()">Reset</button><span class="readout" id="cuped-read">Raw data — wide confidence intervals</span></div>
@@ -137,7 +137,7 @@
 <div class="card" id="winsor">
   <h3>✂️ Winsorization</h3>
   <div class="chips"><span class="chip ss">Statsig: percentile capping per metric (+ exact caps on WHN)</span><span class="chip am">Amplitude: percentile capping + log transform</span></div>
-  <div class="eli5"><b>ELI5:</b> One kid brings 500 marbles to school, and suddenly "the average kid has 40 marbles" — which is nonsense. Winsorization says: for the math, <b>pretend that kid brought 20</b> (about the most a normal kid brings). Nobody takes their marbles away — we just don't let one kid single-handedly wreck the average.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> One kid brings 500 marbles to school, and suddenly "the average kid has 40 marbles" — which is nonsense. Winsorization says: for the math, <b>pretend that kid brought 20</b> (about the most a normal kid brings). Nobody takes their marbles away — we just don't let one kid single-handedly wreck the average.</div>
   <div class="anim">
     <canvas id="cv-winsor" height="240"></canvas>
     <div class="bar"><button class="play" onclick="winsorPlay()">▶ Winsorize (P95)</button><button class="play ghost" onclick="winsorReset()">Reset</button><span class="readout" id="winsor-read">Raw: 2 whales inflate the mean</span></div>
@@ -153,7 +153,7 @@
 <div class="card" id="bonf">
   <h3>🎯 Bonferroni Correction</h3>
   <div class="chips"><span class="chip ss">Statsig: optional (also offers Benjamini–Hochberg)</span><span class="chip am">Amplitude: applied for multi-variant/metric; off in Bayesian</span></div>
-  <div class="eli5"><b>ELI5:</b> Make one wish and it comes true — wow, magic! Make 12 wishes and one comes true — that's not magic, that's just odds. Checking 12 metrics is making 12 wishes: one will "win" by pure luck. Bonferroni's rule: <b>the more wishes you make, the stronger the proof each one needs</b> before anyone believes it.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> Make one wish and it comes true — wow, magic! Make 12 wishes and one comes true — that's not magic, that's just odds. Checking 12 metrics is making 12 wishes: one will "win" by pure luck. Bonferroni's rule: <b>the more wishes you make, the stronger the proof each one needs</b> before anyone believes it.</div>
   <div class="anim">
     <canvas id="cv-bonf" height="240"></canvas>
     <div class="bar"><button class="play" onclick="bonfPlay(false)">▶ Run 12 tests, no correction</button><button class="play ghost" onclick="bonfPlay(true)">▶ With Bonferroni</button><span class="readout" id="bonf-read"></span></div>
@@ -169,7 +169,7 @@
 <div class="card" id="seq">
   <h3>👀 Sequential Testing</h3>
   <div class="chips"><span class="chip ss">Statsig: opt-in toggle (regression detection)</span><span class="chip am">Amplitude: the DEFAULT stats engine</span></div>
-  <div class="eli5"><b>ELI5:</b> Baking a cake the old way: open the oven early and you ruin it. Sequential testing is an oven with a <b>glass door</b> — peek as often as you like, nothing gets ruined. The catch: early on the glass is foggy, so you can only call it if the result is REALLY obvious. The longer you wait, the clearer the glass gets.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> Baking a cake the old way: open the oven early and you ruin it. Sequential testing is an oven with a <b>glass door</b> — peek as often as you like, nothing gets ruined. The catch: early on the glass is foggy, so you can only call it if the result is REALLY obvious. The longer you wait, the clearer the glass gets.</div>
   <div class="anim">
     <canvas id="cv-seq" height="240"></canvas>
     <div class="bar"><button class="play" onclick="seqPlay()">▶ Run 28 days</button><span class="readout" id="seq-read"></span></div>
@@ -185,7 +185,7 @@
 <div class="card" id="sprt">
   <h3>🏁 SPRT (Sequential Probability Ratio Test)</h3>
   <div class="chips"><span class="chip ss">Statsig: dedicated analytics type</span><span class="chip am">Amplitude: mSPRT powers its sequential engine</span></div>
-  <div class="eli5"><b>ELI5:</b> A tug-of-war between "it works" and "it doesn't." Every new shopper's data pulls the rope a little one way or the other. The instant the rope crosses a line — <b>game over, we have our answer.</b> A strong team wins in seconds; two even teams keep pulling. That's why obvious winners finish fast and unclear tests keep going.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> A tug-of-war between "it works" and "it doesn't." Every new shopper's data pulls the rope a little one way or the other. The instant the rope crosses a line — <b>game over, we have our answer.</b> A strong team wins in seconds; two even teams keep pulling. That's why obvious winners finish fast and unclear tests keep going.</div>
   <div class="anim">
     <canvas id="cv-sprt" height="240"></canvas>
     <div class="bar"><button class="play" onclick="sprtPlay(true)">▶ Strong effect</button><button class="play ghost" onclick="sprtPlay(false)">▶ No real effect</button><span class="readout" id="sprt-read"></span></div>
@@ -201,7 +201,7 @@
 <div class="card" id="bayes">
   <h3>🔮 Bayesian Statistics</h3>
   <div class="chips"><span class="chip ss">Statsig: Bayesian analytics type + priors</span><span class="chip am">Amplitude: Bayesian option — P(beat control)</span></div>
-  <div class="eli5"><b>ELI5:</b> Guess how many candies are in the jar. Someone shows you a handful — you fix your guess. Another handful — you fix it again. Start unsure, end confident. That's Bayesian: <b>every bit of data updates your best guess.</b> And instead of cryptic stats-speak, it answers like a weather forecast: "94% chance the new version is better."</div>
+  <div class="eli5"><b>🧒 ELI6:</b> Guess how many candies are in the jar. Someone shows you a handful — you fix your guess. Another handful — you fix it again. Start unsure, end confident. That's Bayesian: <b>every bit of data updates your best guess.</b> And instead of cryptic stats-speak, it answers like a weather forecast: "94% chance the new version is better."</div>
   <div class="anim">
     <canvas id="cv-bayes" height="240"></canvas>
     <div class="bar"><button class="play" onclick="bayesPlay()">▶ Feed in data</button><span class="readout" id="bayes-read">Prior: vague belief around zero lift</span></div>
@@ -217,7 +217,7 @@
 <div class="card" id="srm">
   <h3>🚨 SRM (Sample Ratio Mismatch)</h3>
   <div class="chips"><span class="chip ss">Statsig: auto chi-squared health check</span><span class="chip am">Amplitude: auto chi-squared diagnostic</span></div>
-  <div class="eli5"><b>ELI5:</b> You split candies 50/50 between two friends — but one somehow ends up with way more. With 10 candies, that can happen by luck. With a <i>million</i> candies, it can't — <b>someone is dropping candies on the way.</b> SRM is the alarm that catches the leak. And rule one: when candies are leaking, don't judge who's happier — fix the leak first.</div>
+  <div class="eli5"><b>🧒 ELI6:</b> You split candies 50/50 between two friends — but one somehow ends up with way more. With 10 candies, that can happen by luck. With a <i>million</i> candies, it can't — <b>someone is dropping candies on the way.</b> SRM is the alarm that catches the leak. And rule one: when candies are leaking, don't judge who's happier — fix the leak first.</div>
   <div class="anim">
     <canvas id="cv-srm" height="240"></canvas>
     <div class="bar"><button class="play" onclick="srmPlay(false)">▶ Healthy 50/50</button><button class="play ghost" onclick="srmPlay(true)">▶ Broken split</button><span class="readout" id="srm-read"></span></div>

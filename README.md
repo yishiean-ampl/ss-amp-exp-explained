@@ -38,3 +38,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.8 | 2026-07-03 | "Course N of 4" hero badges on courses 1, 3, 4 (course 1 badge text updated; badges added to 3 & 4) |
 | v1.9 | 2026-07-03 | stats-models nav: fixed stuck highlight — replaced static first-pill styling with a scrollspy (.active follows the section in view and on click) |
 | v1.10 | 2026-07-03 | QA pass: unbolded course 3 & 4 hero badges, added missing AI disclaimer to concept-map, standardised all page titles with "· Learn Statsig" suffix |
+| v1.11 | 2026-07-03 | ELI labels standardised to 🧒 ELI6 across all pages (stats-models ELI5→ELI6 x9, emoji position aligned on courses 1-3) |
