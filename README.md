@@ -31,3 +31,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.1 | 2026-07-03 | Added Statsig vs Amplitude statistical models page (stats-models.html), nav updated across all pages |
 | v1.2 | 2026-07-03 | Hub split into two sections: /learn-statsig Courses (4-course track) and Reference Library (stats models + concept map) |
 | v1.3 | 2026-07-03 | Removed hero learning-path strip — hub is growing beyond a fixed 5-page path |
+| v1.4 | 2026-07-03 | Scroll-to-top button on all pages (appears after 350px scroll, smooth scroll, hover state) |

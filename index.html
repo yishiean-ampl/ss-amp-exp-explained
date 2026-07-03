@@ -108,5 +108,18 @@ h2.sect{font-size:1.05rem;font-weight:800;color:var(--darkblue);margin:34px 0 4p
     <a href="https://amplitude.com" target="_blank">Amplitude</a>
   </div>
 </div>
+
+<!-- scroll-to-top -->
+<button id="scrollTopBtn" aria-label="Scroll to top" style="position:fixed;bottom:22px;right:22px;z-index:9999;width:46px;height:46px;border-radius:50%;border:none;background:#0052F2;color:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,26,79,.35);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .25s,transform .25s">↑</button>
+<script>
+(function(){
+  var b=document.getElementById('scrollTopBtn');
+  function t(){var on=window.scrollY>350;b.style.opacity=on?'1':'0';b.style.pointerEvents=on?'auto':'none';b.style.transform=on?'translateY(0)':'translateY(8px)';}
+  window.addEventListener('scroll',t,{passive:true});t();
+  b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  b.addEventListener('mouseenter',function(){b.style.background='#001A4F';});
+  b.addEventListener('mouseleave',function(){b.style.background='#0052F2';});
+})();
+</script>
 </body>
 </html>
