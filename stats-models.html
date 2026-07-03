@@ -19,9 +19,11 @@
   .hero p{color:#fff; opacity:.85; max-width:640px; margin:0; font-size:.95rem; position:relative; z-index:1;}
   .hero .tags{margin-top:16px; display:flex; gap:8px; justify-content:flex-start; flex-wrap:wrap; position:relative; z-index:1;}
   .hero .tag{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:5px 14px; font-size:.82rem;}
-  nav{position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid var(--line); display:flex; gap:6px; overflow-x:auto; padding:10px 16px;}
-  nav a{white-space:nowrap; text-decoration:none; color:var(--muted); font-size:.85rem; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid transparent;}
-  nav a:hover{color:var(--blue); background:#EEF2FF;}
+  nav{position:sticky; top:0; z-index:50; background:var(--bg); display:flex; gap:8px; overflow-x:auto; padding:12px 20px; max-width:980px; margin:0 auto;}
+  nav a{white-space:nowrap; text-decoration:none; color:var(--muted); font-size:13px; font-weight:600; padding:9px 13px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); transition:.15s;}
+  nav a:hover{color:var(--blue); border-color:var(--lilac);}
+  nav a:first-child{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(0,82,242,.25);}
+  nav a:first-child:hover{color:#fff;}
   .wrap{max-width:980px; margin:0 auto; padding:32px 20px 80px;}
   h2.section-head{font-size:1.35rem; margin:44px 0 6px; color:var(--darkblue);}
   .sub{color:var(--muted); font-size:.95rem; margin-bottom:16px;}
