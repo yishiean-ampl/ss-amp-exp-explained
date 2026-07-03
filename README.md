@@ -42,3 +42,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.11 | 2026-07-03 | ELI labels standardised to 🧒 ELI6 across all pages (stats-models ELI5→ELI6 x9, emoji position aligned on courses 1-3) |
 | v1.12 | 2026-07-04 | "Last updated" date stamp added to the footer of every page |
 | v1.13 | 2026-07-04 | Folded in Amplitude Experiment Mechanics page (amplitude-mechanics.html): house hero + pill nav + scrollspy + 🧒 ELI6 x13 + full footer kit; navbar rebuilt across all 8 pages |
+| v1.14 | 2026-07-04 | Removed duplicate hero concept pills on stats-models + amplitude-mechanics; section nav now wraps (no hidden horizontal scroll) |
