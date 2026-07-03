@@ -44,3 +44,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.13 | 2026-07-04 | Folded in Amplitude Experiment Mechanics page (amplitude-mechanics.html): house hero + pill nav + scrollspy + 🧒 ELI6 x13 + full footer kit; navbar rebuilt across all 8 pages |
 | v1.14 | 2026-07-04 | Removed duplicate hero concept pills on stats-models + amplitude-mechanics; section nav now wraps (no hidden horizontal scroll) |
 | v1.15 | 2026-07-04 | Purple-infused hero gradients, unique per page (angles 115-160deg, varied violet midpoints); analytics-session-replay kept as the reference favourite |
+| v1.16 | 2026-07-04 | One-line hero titles: stats-models reworded to "Statsig & Amplitude Experiment's Stats Models, Explained"; amp-mechanics trimmed to "Bucketing to P-Values" |
