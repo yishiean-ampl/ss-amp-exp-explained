@@ -46,3 +46,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.15 | 2026-07-04 | Purple-infused hero gradients, unique per page (angles 115-160deg, varied violet midpoints); analytics-session-replay kept as the reference favourite |
 | v1.16 | 2026-07-04 | One-line hero titles: stats-models reworded to "Statsig & Amplitude Experiment's Stats Models, Explained"; amp-mechanics trimmed to "Bucketing to P-Values" |
 | v1.17 | 2026-07-04 | stats-models hero subtext reframed: confidence-building, not an obligation list |
+| v1.18 | 2026-07-04 | amplitude-mechanics: characters renamed Ana→Baljin, Priya→Madushri |
