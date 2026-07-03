@@ -13,6 +13,7 @@ Interactive, animated learning site for the **Learn Statsig** track — built fo
 | `reading-results.html` | Reading Experiment Results — scorecard, lift, SRM, ship decisions (animated stats) |
 | `feature-gates.html` | Feature Gates Deep Dive — rule fall-through, rollout hashing, gate metrics, safe ops |
 | `analytics-session-replay.html` | Analytics + Session Replay — Metrics Explorer, funnel split, replay triggers |
+| `stats-models.html` | Statsig vs Amplitude — statistical models, animated (sequential testing, Bayesian/frequentist, CUPED) |
 | `concept-map.html` | Statsig ↔ Amplitude concept map (reference) |
 
 Each course includes interactive simulators for statistical concepts, ELI6 explanations, Amplitude equivalents, and per-unit + cumulative quizzes. Quiz progress is stored in browser localStorage.
@@ -27,3 +28,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | Version | Date | Change |
 | --- | --- | --- |
 | v1.0 | 2026-07-03 | Initial site: 5 artifacts unified with shared nav + hub page, published to GitHub Pages |
+| v1.1 | 2026-07-03 | Added Statsig vs Amplitude statistical models page (stats-models.html), nav updated across all pages |

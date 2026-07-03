@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statsig vs Amplitude — Statistical Models, Animated</title>
+<style>
+  :root{
+    --blue:#0052F2; --darkblue:#001A4F; --lilac:#6980FF; --violet:#A373FF;
+    --pink:#FF7D78; --red:#F23845; --green:#0EA05C; --ink:#0B0D17;
+    --bg:#F7F8FC; --card:#FFFFFF; --line:#E4E8F5; --muted:#5A6382;
+    --statsig:#194B7D; --amp:#0052F2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:Gellix,Poppins,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.55;}
+  .hero{background:linear-gradient(135deg,var(--darkblue) 0%,#0A2A6E 60%,#123A9E 100%); color:#fff; padding:48px 24px 40px; text-align:center;}
+  .hero h1{font-size:2rem; font-weight:700; margin-bottom:10px;}
+  .hero p{color:#B9C6F0; max-width:760px; margin:0 auto; font-size:1.02rem;}
+  .hero .tags{margin-top:18px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .hero .tag{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:5px 14px; font-size:.82rem;}
+  nav{position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid var(--line); display:flex; gap:6px; overflow-x:auto; padding:10px 16px;}
+  nav a{white-space:nowrap; text-decoration:none; color:var(--muted); font-size:.85rem; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid transparent;}
+  nav a:hover{color:var(--blue); background:#EEF2FF;}
+  .wrap{max-width:980px; margin:0 auto; padding:32px 20px 80px;}
+  h2.section-head{font-size:1.35rem; margin:44px 0 6px; color:var(--darkblue);}
+  .sub{color:var(--muted); font-size:.95rem; margin-bottom:16px;}
+
+  /* glance table */
+  table.glance{width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 10px rgba(0,26,79,.06); font-size:.88rem;}
+  .glance th{background:var(--darkblue); color:#fff; padding:11px 12px; text-align:left; font-weight:600;}
+  .glance td{padding:10px 12px; border-top:1px solid var(--line); vertical-align:top;}
+  .glance tr td:first-child{font-weight:700; color:var(--darkblue);}
+  .pill{display:inline-block; border-radius:999px; padding:2px 10px; font-size:.75rem; font-weight:700;}
+  .pill.yes{background:#E2F5EA; color:var(--green);}
+  .pill.def{background:#E4EBFF; color:var(--blue);}
+  .pill.opt{background:#F1ECFF; color:var(--violet);}
+  .pill.no{background:#FDE7E8; color:var(--red);}
+
+  /* concept cards */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px; margin-top:26px; box-shadow:0 2px 12px rgba(0,26,79,.05); scroll-margin-top:70px;}
+  .card h3{font-size:1.25rem; color:var(--darkblue); display:flex; align-items:center; gap:10px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 14px;}
+  .chip{font-size:.75rem; font-weight:700; border-radius:999px; padding:4px 12px;}
+  .chip.ss{background:#E8F0FA; color:var(--statsig); border:1px solid #C4D8EE;}
+  .chip.am{background:#E4EBFF; color:var(--amp); border:1px solid #C3D2FF;}
+  .eli5{background:#F4F7FF; border-left:4px solid var(--lilac); border-radius:0 12px 12px 0; padding:14px 16px; margin:12px 0; font-size:.95rem;}
+  .eli5 b{color:var(--darkblue);}
+  .usecase{background:#FFF4F3; border-left:4px solid var(--pink); border-radius:0 12px 12px 0; padding:14px 16px; margin:12px 0; font-size:.93rem;}
+  .usecase b{color:#B03A36;}
+  .anim{background:#0D1226; border-radius:14px; padding:14px; margin:14px 0; position:relative;}
+  .anim canvas{width:100%; display:block; border-radius:8px;}
+  .anim .bar{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  button.play{background:var(--blue); border:none; color:#fff; font-weight:700; font-size:.82rem; padding:7px 16px; border-radius:999px; cursor:pointer; font-family:inherit;}
+  button.play:hover{background:#0344c4;}
+  button.ghost{background:transparent; border:1px solid #3A4470; color:#AAB6E8;}
+  button.ghost:hover{border-color:var(--lilac); color:#fff;}
+  .readout{color:#AAB6E8; font-size:.8rem; font-weight:600;}
+  .vs{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
+  .vs .col{border:1px solid var(--line); border-radius:12px; padding:13px 15px; font-size:.87rem;}
+  .vs .col h4{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px;}
+  .vs .ss h4{color:var(--statsig);} .vs .am h4{color:var(--amp);}
+  .vs ul{padding-left:16px;} .vs li{margin:4px 0;}
+  .foot{margin-top:50px; font-size:.8rem; color:var(--muted);}
+  .foot a{color:var(--blue); text-decoration:none;}
+  .warn{background:#FFF8E6; border:1px solid #F2DFA0; border-radius:12px; padding:12px 16px; font-size:.85rem; margin-top:24px;}
+  @media(max-width:680px){.vs{grid-template-columns:1fr;} .hero h1{font-size:1.5rem;}}
+</style>
+</head>
+<body>
+<div style="background:#001A4F;padding:10px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-family:-apple-system,BlinkMacSystemFont,Helvetica,sans-serif;font-size:13px"><a href="index.html" style="color:#fff;font-weight:800;text-decoration:none;margin-right:8px">🧭 Statsig Enablement</a><a href="statsig-101.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">1️⃣ Statsig 101</a><a href="reading-results.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">2️⃣ Reading Results</a><a href="feature-gates.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">3️⃣ Feature Gates</a><a href="analytics-session-replay.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">4️⃣ Analytics + SR</a><a href="stats-models.html" style="color:#fff;font-weight:800;text-decoration:none">⚖️ Stats Models</a><a href="concept-map.html" style="color:#9fb9ff;font-weight:600;text-decoration:none">🗺️ Concept Map</a></div>
+
+<div class="hero">
+  <h1>📊 Statsig vs Amplitude Experiment<br>The Statistical Models, Animated</h1>
+  <p>Eight stats concepts every SC should be able to explain on a call — each with an ELI5, an animated visual, and a worked example from <b>AmpliBeauty 💄</b>, a fictional beauty e-commerce brand.</p>
+  <div class="tags"><span class="tag">CUPED</span><span class="tag">Winsorization</span><span class="tag">T-Test</span><span class="tag">Bonferroni</span><span class="tag">Sequential</span><span class="tag">SPRT</span><span class="tag">Bayesian</span><span class="tag">SRM</span></div>
+</div>
+
+<nav>
+  <a href="#glance">⚡ At a glance</a><a href="#ttest">T-Test</a><a href="#cuped">CUPED</a><a href="#winsor">Winsorization</a><a href="#bonf">Bonferroni</a><a href="#seq">Sequential</a><a href="#sprt">SPRT</a><a href="#bayes">Bayesian</a><a href="#srm">SRM</a>
+</nav>
+
+<div class="wrap">
+
+<h2 class="section-head" id="glance">⚡ At a glance: who has what</h2>
+<p class="sub">Same statistical toolbox, different defaults. The biggest philosophical difference: <b>Amplitude runs sequential testing by default</b> (peek anytime), while <b>Statsig defaults to fixed-horizon frequentist</b> and offers sequential, SPRT and Bayesian as opt-in modes.</p>
+<table class="glance">
+  <tr><th>Concept</th><th>Statsig</th><th>Amplitude Experiment</th></tr>
+  <tr><td>T-Test / Z-Test</td><td><span class="pill def">Default</span> Two-sample z-test (Welch's t-test for small samples)</td><td><span class="pill opt">Option</span> Welch's T-test (fixed-horizon mode)</td></tr>
+  <tr><td>CUPED</td><td><span class="pill yes">Yes</span> Per-metric; extended as CURE on Warehouse Native</td><td><span class="pill yes">Yes</span> Advanced setting; corrects pre-exposure bias</td></tr>
+  <tr><td>Winsorization</td><td><span class="pill yes">Yes</span> Percentile capping per metric (+ exact capping on WHN)</td><td><span class="pill yes">Yes</span> Configurable percentile + optional log transform</td></tr>
+  <tr><td>Bonferroni</td><td><span class="pill opt">Option</span> Adjusts α across variants / metrics</td><td><span class="pill yes">Yes</span> Applied for multi-variant / multi-metric; auto-off in Bayesian</td></tr>
+  <tr><td>Benjamini–Hochberg</td><td><span class="pill yes">Yes</span> Less strict FDR alternative to Bonferroni</td><td><span class="pill no">No direct equivalent</span></td></tr>
+  <tr><td>Sequential testing</td><td><span class="pill opt">Option</span> Toggle for early regression detection</td><td><span class="pill def">Default</span> Always-valid p-values; peek anytime</td></tr>
+  <tr><td>SPRT</td><td><span class="pill opt">Option</span> Dedicated analytics type</td><td><span class="pill def">Built-in</span> Its sequential engine is mSPRT (same family)</td></tr>
+  <tr><td>Bayesian</td><td><span class="pill opt">Option</span> Analytics type, supports priors</td><td><span class="pill opt">Option</span> P(beat control), expected loss</td></tr>
+  <tr><td>SRM checks</td><td><span class="pill yes">Auto</span> Chi-squared health check</td><td><span class="pill yes">Auto</span> Chi-squared diagnostic + troubleshooting flow</td></tr>
+</table>
+
+<!-- ================= T-TEST ================= -->
+<div class="card" id="ttest">
+  <h3>📐 T-Test (and Z-Test)</h3>
+  <div class="chips"><span class="chip ss">Statsig: default engine (z-test, Welch's t for small n)</span><span class="chip am">Amplitude: Welch's T-test (fixed-horizon option)</span></div>
+  <div class="eli5"><b>ELI5:</b> You and your friend each have a bag of cookies, and yours look bigger. But are they <i>really</i> bigger — or did you just happen to grab a big one? The T-test is the referee who checks ALL the cookies in both bags and rules: <b>"yes, truly bigger"</b> or <b>"nah, same-ish, you got lucky."</b> The bigger the difference and the more alike the cookies in each bag, the easier the call.</div>
+  <div class="anim">
+    <canvas id="cv-ttest" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="ttestPlay()">▶ Replay</button>
+    <input type="range" id="ttest-lift" min="0" max="100" value="55" oninput="ttestDraw()" style="accent-color:#6980FF">
+    <span class="readout" id="ttest-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> They test a new "Shade Finder" quiz on the foundation category page. Control converts at 4.1%, quiz variant at 4.6%. The T-test asks: given ~50k shoppers per arm and daily noise from payday spikes and K-beauty drops, is that +0.5pt lift signal or luck? p = 0.008 → signal. Ship the quiz.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Default frequentist engine: two-sample z-test on metric deltas.</li><li>Switches to Welch's t-test for small samples.</li><li>Fixed-horizon by design — decide sample size up front, read at the end.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Welch's T-test available as the fixed-horizon method.</li><li>Doesn't assume equal variance between arms (Welch's).</li><li>Default experience is sequential instead — see below.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= CUPED ================= -->
+<div class="card" id="cuped">
+  <h3>🎧 CUPED (Variance Reduction)</h3>
+  <div class="chips"><span class="chip ss">Statsig: CUPED + CURE (Warehouse Native)</span><span class="chip am">Amplitude: CUPED (advanced settings)</span></div>
+  <div class="eli5"><b>ELI5:</b> Kids run a race to test new shoes. Problem: some kids are just naturally fast, so it's hard to tell if the shoes did anything. CUPED's trick: check how fast each kid ran <i>last week</i>, then ask one simple question — <b>did they beat their own usual speed?</b> Once everyone is compared to themselves, the shoes' real effect pops out much faster.</div>
+  <div class="anim">
+    <canvas id="cv-cuped" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="cupedPlay()">▶ Apply CUPED</button><button class="play ghost" onclick="cupedReset()">Reset</button><span class="readout" id="cuped-read">Raw data — wide confidence intervals</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> Revenue-per-user is dominated by VIP "beauty haulers" who spend $300/month regardless of what you test. In a free-sampler experiment, CUPED uses each shopper's last-30-day spend as a covariate: the haulers' predictable spending is netted out, confidence intervals shrink ~40%, and a test that needed 4 weeks reads out in ~2.5.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Enabled per metric; configurable pre-exposure lookback window.</li><li><b>CURE</b> on Warehouse Native extends CUPED with regression on multiple covariates.</li><li>Also used to detect/absorb pre-experiment bias.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Toggle in the experiment's advanced statistical settings.</li><li>Explicitly framed as the fix for <b>pre-exposure bias</b> from unbalanced bucketing.</li><li>Applied to supported metric types in analysis.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= WINSORIZATION ================= -->
+<div class="card" id="winsor">
+  <h3>✂️ Winsorization</h3>
+  <div class="chips"><span class="chip ss">Statsig: percentile capping per metric (+ exact caps on WHN)</span><span class="chip am">Amplitude: percentile capping + log transform</span></div>
+  <div class="eli5"><b>ELI5:</b> One kid brings 500 marbles to school, and suddenly "the average kid has 40 marbles" — which is nonsense. Winsorization says: for the math, <b>pretend that kid brought 20</b> (about the most a normal kid brings). Nobody takes their marbles away — we just don't let one kid single-handedly wreck the average.</div>
+  <div class="anim">
+    <canvas id="cv-winsor" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="winsorPlay()">▶ Winsorize (P95)</button><button class="play ghost" onclick="winsorReset()">Reset</button><span class="readout" id="winsor-read">Raw: 2 whales inflate the mean</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> During a bundle-pricing test, a professional makeup artist buys $8,400 of stock in one order — landing in the treatment arm. Without winsorization, treatment "wins" on revenue purely because of her. Cap at P99 (~$450/order) and the reseller's order counts as $450: now the test measures what typical shoppers actually do.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Percentile computed on non-zero, non-null values; everything above Pₓ set to Pₓ.</li><li>Warehouse Native: configurable per metric, plus <b>exact value capping</b> (e.g. cap daily purchases at 100 to exclude resellers).</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Configurable winsorization percentile per experiment metric.</li><li>Optional <b>log transform</b> for heavy-tailed metrics — winsorization applies first, then the log.</li><li>Pairs with bot-blocking / internal-user filtering.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= BONFERRONI ================= -->
+<div class="card" id="bonf">
+  <h3>🎯 Bonferroni Correction</h3>
+  <div class="chips"><span class="chip ss">Statsig: optional (also offers Benjamini–Hochberg)</span><span class="chip am">Amplitude: applied for multi-variant/metric; off in Bayesian</span></div>
+  <div class="eli5"><b>ELI5:</b> Make one wish and it comes true — wow, magic! Make 12 wishes and one comes true — that's not magic, that's just odds. Checking 12 metrics is making 12 wishes: one will "win" by pure luck. Bonferroni's rule: <b>the more wishes you make, the stronger the proof each one needs</b> before anyone believes it.</div>
+  <div class="anim">
+    <canvas id="cv-bonf" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="bonfPlay(false)">▶ Run 12 tests, no correction</button><button class="play ghost" onclick="bonfPlay(true)">▶ With Bonferroni</button><span class="readout" id="bonf-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The growth PM launches one homepage test but attaches 12 metrics: revenue, AOV, quiz starts, wishlist adds, reviews read... At α = 0.05, there's a ~46% chance <i>at least one</i> metric "wins" by pure chance. Bonferroni sets each metric's bar to 0.05/12 ≈ 0.004 — the fake "wishlist adds +9%!" win disappears, and only real effects survive.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Optional; adjusted α shown on hover over confidence intervals.</li><li>Can correct across variants and/or metrics; also applies in power analysis.</li><li>Offers <b>Benjamini–Hochberg</b> as a less-strict FDR alternative — Amplitude has no direct equivalent.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Treats each variant/metric as its own hypothesis; correction guards the family-wise error rate.</li><li>Automatically <b>disabled under Bayesian</b> analysis (Bayesian controls false positives differently).</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= SEQUENTIAL ================= -->
+<div class="card" id="seq">
+  <h3>👀 Sequential Testing</h3>
+  <div class="chips"><span class="chip ss">Statsig: opt-in toggle (regression detection)</span><span class="chip am">Amplitude: the DEFAULT stats engine</span></div>
+  <div class="eli5"><b>ELI5:</b> Baking a cake the old way: open the oven early and you ruin it. Sequential testing is an oven with a <b>glass door</b> — peek as often as you like, nothing gets ruined. The catch: early on the glass is foggy, so you can only call it if the result is REALLY obvious. The longer you wait, the clearer the glass gets.</div>
+  <div class="anim">
+    <canvas id="cv-seq" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="seqPlay()">▶ Run 28 days</button><span class="readout" id="seq-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> They ship a new one-page checkout the week before a mega sale. With Amplitude's default sequential engine, the team peeks daily with a clear conscience. Day 6: adjusted CI on checkout conversion excludes zero → call it early and lock in the win before the sale. And if it had <i>tanked</i> conversion, the same math would have flagged the regression by day 2–3 instead of week 4.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Opt-in overlay on frequentist results: adjusted CIs shown alongside unadjusted.</li><li>Positioned mainly for <b>early regression detection</b>, not early shipping.</li><li>If the adjusted CI still overlaps zero — keep running as planned.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li><b>Default</b> methodology: always-valid p-values, flexible sample size.</li><li>Peek any time without inflating false positive rates.</li><li>Trade-off: with small lifts, significance can take longer than a fixed-horizon test.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= SPRT ================= -->
+<div class="card" id="sprt">
+  <h3>🏁 SPRT (Sequential Probability Ratio Test)</h3>
+  <div class="chips"><span class="chip ss">Statsig: dedicated analytics type</span><span class="chip am">Amplitude: mSPRT powers its sequential engine</span></div>
+  <div class="eli5"><b>ELI5:</b> A tug-of-war between "it works" and "it doesn't." Every new shopper's data pulls the rope a little one way or the other. The instant the rope crosses a line — <b>game over, we have our answer.</b> A strong team wins in seconds; two even teams keep pulling. That's why obvious winners finish fast and unclear tests keep going.</div>
+  <div class="anim">
+    <canvas id="cv-sprt" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="sprtPlay(true)">▶ Strong effect</button><button class="play ghost" onclick="sprtPlay(false)">▶ No real effect</button><span class="readout" id="sprt-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> They A/B a "Only 3 left!" urgency badge on product pages. The effect is big and immediate — add-to-bag jumps. Under SPRT the evidence ratio smashes through the decision boundary in 5 days on a test scoped for 3 weeks. That's 16 days of extra conversion banked, and the test slot freed for the next idea.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Explicit, selectable analytics type in experiment setup.</li><li>Meaningfully shortens tests when evidence is strong in either direction.</li><li>Traditional methods may still be preferable for some experiment types.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Not a separate mode — its default sequential testing is <b>mSPRT</b> (mixture SPRT), the same family.</li><li>So "does Amplitude have SPRT?" → yes, it's the engine under the hood.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= BAYESIAN ================= -->
+<div class="card" id="bayes">
+  <h3>🔮 Bayesian Statistics</h3>
+  <div class="chips"><span class="chip ss">Statsig: Bayesian analytics type + priors</span><span class="chip am">Amplitude: Bayesian option — P(beat control)</span></div>
+  <div class="eli5"><b>ELI5:</b> Guess how many candies are in the jar. Someone shows you a handful — you fix your guess. Another handful — you fix it again. Start unsure, end confident. That's Bayesian: <b>every bit of data updates your best guess.</b> And instead of cryptic stats-speak, it answers like a weather forecast: "94% chance the new version is better."</div>
+  <div class="anim">
+    <canvas id="cv-bayes" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="bayesPlay()">▶ Feed in data</button><span class="readout" id="bayes-read">Prior: vague belief around zero lift</span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> The CMO won't read p-values. For a loyalty-tier renaming test, the team switches to Bayesian and reports: "92% probability the new names lift repeat purchase; expected downside if we're wrong is 0.1%." Decision made in one meeting. Bonus: they encode a prior from last year's similar rebrand test, so the experiment starts smart instead of from scratch.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Selectable analytics type; supports informative <b>priors</b> (posterior precision-weights prior + observed data).</li><li>Good for encoding institutional knowledge from past tests.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Bayesian option reports probability-to-beat-control and expected loss.</li><li>Controls false positives its own way — <b>Bonferroni is auto-disabled</b> in this mode.</li></ul></div>
+  </div>
+</div>
+
+<!-- ================= SRM ================= -->
+<div class="card" id="srm">
+  <h3>🚨 SRM (Sample Ratio Mismatch)</h3>
+  <div class="chips"><span class="chip ss">Statsig: auto chi-squared health check</span><span class="chip am">Amplitude: auto chi-squared diagnostic</span></div>
+  <div class="eli5"><b>ELI5:</b> You split candies 50/50 between two friends — but one somehow ends up with way more. With 10 candies, that can happen by luck. With a <i>million</i> candies, it can't — <b>someone is dropping candies on the way.</b> SRM is the alarm that catches the leak. And rule one: when candies are leaking, don't judge who's happier — fix the leak first.</div>
+  <div class="anim">
+    <canvas id="cv-srm" height="240"></canvas>
+    <div class="bar"><button class="play" onclick="srmPlay(false)">▶ Healthy 50/50</button><button class="play ghost" onclick="srmPlay(true)">▶ Broken split</button><span class="readout" id="srm-read"></span></div>
+  </div>
+  <div class="usecase"><b>💄 AmpliBeauty:</b> A landing-page redirect test shows treatment winning big — but SRM fires: 55/45 split. Cause: the redirect took 1.2s and impatient mobile users on slow SEA networks bounced before the treatment exposure logged. The "win" was survivorship bias — only patient users stayed in treatment. Without the SRM check, they'd have shipped a page that actually loses mobile revenue.</div>
+  <div class="vs">
+    <div class="col ss"><h4>Statsig</h4><ul><li>Automatic chi-squared test of observed vs expected allocation.</li><li>Tiered alerts by p-value severity; also checks deduplication bias across ID types on WHN.</li></ul></div>
+    <div class="col am"><h4>Amplitude</h4><ul><li>Automatic SRM diagnostic with a dedicated troubleshooting guide.</li><li>Docs call out common causes: mid-flight allocation changes, redirect timing, targeting changes.</li></ul></div>
+  </div>
+</div>
+
+<div class="warn">⚠️ <b>Before customer use:</b> AI-assembled summary grounded in the docs below — validate specific claims (defaults, toggles, availability by plan) against the live docs or an SME before quoting externally.</div>
+
+<div class="foot">
+  <b>Sources — Statsig docs:</b>
+  <a href="https://docs.statsig.com/experiments/statistical-methods/methodologies/cuped">CUPED</a> ·
+  <a href="https://docs.statsig.com/statsig-warehouse-native/cure/introduction">CURE</a> ·
+  <a href="https://docs.statsig.com/experiments/statistical-methods/methodologies/winsorization">Winsorization</a> ·
+  <a href="https://docs.statsig.com/experiments/statistical-methods/methodologies/bonferroni-correction">Bonferroni</a> ·
+  <a href="https://docs.statsig.com/experiments/statistical-methods/methodologies/benjamini-hochberg-procedure">Benjamini–Hochberg</a> ·
+  <a href="https://docs.statsig.com/experiments/advanced-setup/sequential-testing">Sequential Testing</a> ·
+  <a href="https://docs.statsig.com/experiments/advanced-setup/sprt">SPRT</a> ·
+  <a href="https://docs.statsig.com/experiments/advanced-setup/bayesian">Bayesian</a> ·
+  <a href="https://docs.statsig.com/stats-engine/methodologies/srm-checks">SRM</a> ·
+  <a href="https://docs.statsig.com/experiments/statistical-methods/variance-reduction">Variance Reduction</a>
+  <br><b>Sources — Amplitude docs:</b>
+  <a href="https://amplitude.com/docs/feature-experiment/experiment-theory/analyze-with-t-test">Welch's T-test</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/workflow/finalize-statistical-preferences">CUPED &amp; advanced settings</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/advanced-techniques/winsorization-in-experiment">Winsorization</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/advanced-techniques/bonferroni-correction">Bonferroni</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/under-the-hood/experiment-sequential-testing">Sequential Testing (mSPRT)</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/experiment-theory/bayesian-statistics">Bayesian</a> ·
+  <a href="https://amplitude.com/docs/feature-experiment/troubleshooting/sample-ratio-mismatch">SRM</a>
+</div>
+</div>
+
+<script>
+// ---------- shared helpers ----------
+// roundRect polyfill (Safari < 16 etc.)
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(r,w/2,h/2);
+    this.moveTo(x+r,y); this.arcTo(x+w,y,x+w,y+h,r); this.arcTo(x+w,y+h,x,y+h,r);
+    this.arcTo(x,y+h,x,y,r); this.arcTo(x,y,x+w,y,r); this.closePath(); return this;};
+}
+function ctx2d(id){const c=document.getElementById(id);
+  if(!c.dataset.h){c.dataset.h=c.getAttribute('height');} // remember ORIGINAL height once
+  const H=+c.dataset.h, dpr=window.devicePixelRatio||1;
+  c.style.height=H+'px';
+  const w=c.clientWidth||900;
+  const pw=Math.round(w*dpr), ph=Math.round(H*dpr);
+  if(c.width!==pw)c.width=pw; if(c.height!==ph)c.height=ph; // only resize when actually changed
+  const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); return {x,w,h:H};}
+const anims={};
+function loop(key,fn){cancelAnimationFrame(anims[key]); let t0=null;
+  function step(ts){if(!t0)t0=ts; let go=false;
+    try{go=fn((ts-t0)/1000)!==false;}catch(e){console.error(key,e);go=false;}
+    if(go) anims[key]=requestAnimationFrame(step);}
+  anims[key]=requestAnimationFrame(step);}
+function gauss(x,mu,sig){return Math.exp(-0.5*Math.pow((x-mu)/sig,2));}
+const C={bg:'#0D1226',grid:'#232B4E',txtA:'#AAB6E8',blue:'#4083FF',lilac:'#6980FF',violet:'#A373FF',pink:'#FF7D78',red:'#F23845',green:'#2ECC8F',white:'#F0F3FF'};
+function clear(g){g.x.fillStyle=C.bg;g.x.fillRect(0,0,g.w,g.h);}
+function label(g,s,x,y,col,size,align){g.x.fillStyle=col||C.txtA;g.x.font=(size||12)+'px Poppins,Helvetica,sans-serif';g.x.textAlign=align||'left';g.x.fillText(s,x,y);g.x.textAlign='left';}
+
+// ---------- T-TEST: two bell curves ----------
+let ttestProg=1;
+function ttestDraw(){
+  const g=ctx2d('cv-ttest'); clear(g);
+  const lift=+document.getElementById('ttest-lift').value/100; // 0..1
+  const sep=lift*2.2, mu1=g.w*0.42, mu2=g.w*0.42+sep*70, sig=62;
+  const base=g.h-36, amp=150*ttestProg;
+  // curves
+  [[mu1,C.lilac,'Control'],[mu2,C.pink,'Variant']].forEach(([mu,col,name],i)=>{
+    g.x.beginPath();
+    for(let px=0;px<=g.w;px+=3){const y=base-amp*gauss(px,mu,sig); px===0?g.x.moveTo(px,y):g.x.lineTo(px,y);}
+    g.x.strokeStyle=col; g.x.lineWidth=2.5; g.x.stroke();
+    g.x.lineTo(g.w,base); g.x.lineTo(0,base); g.x.closePath();
+    g.x.fillStyle=col+'22'; g.x.fill();
+    label(g,name,mu,base+18,col,12,'center');
+    g.x.setLineDash([4,4]); g.x.beginPath(); g.x.moveTo(mu,base); g.x.lineTo(mu,base-amp); g.x.strokeStyle=col; g.x.lineWidth=1; g.x.stroke(); g.x.setLineDash([]);
+  });
+  // verdict: effect size in sigma units
+  const d=(mu2-mu1)/sig;
+  const sig5=d>0.9; // toy threshold
+  const badge=sig5?['STAT SIG ✓',C.green]:['NOT SIG — could be noise',C.txtA];
+  g.x.fillStyle=badge[1]+'22'; g.x.strokeStyle=badge[1];
+  g.x.beginPath(); g.x.roundRect(g.w-235,16,220,30,15); g.x.fill(); g.x.stroke();
+  label(g,badge[0],g.w-125,36,badge[1],13,'center');
+  label(g,'Drag the slider = size of the lift. Separation vs noise decides significance.',14,24,C.txtA,12);
+  document.getElementById('ttest-read').textContent='Effect size ≈ '+d.toFixed(2)+'σ '+(sig5?'→ gap too big to be luck':'→ curves overlap too much');
+}
+function ttestPlay(){loop('tt',t=>{ttestProg=Math.min(1,t/1.2); ttestDraw(); return ttestProg<1;});}
+
+// ---------- CUPED: scatter tightening ----------
+let cupedPts=null, cupedK=0;
+function cupedInit(){cupedPts=[]; for(let i=0;i<80;i++){const armB=i%2; cupedPts.push({arm:armB, base:(Math.random()-0.5), eff:armB?0.18:0, r:Math.random()});}}
+function cupedDraw(){
+  const g=ctx2d('cv-cuped'); clear(g);
+  if(!cupedPts)cupedInit();
+  const midY=g.h/2, sc=95;
+  const xC=g.w*0.3, xV=g.w*0.7;
+  label(g,'Each dot = one shopper\'s revenue. CUPED subtracts the part you could predict from history.',14,22,C.txtA,12);
+  let meansC=[],meansV=[];
+  cupedPts.forEach(p=>{
+    const noise=p.base*(1-cupedK*0.8); // CUPED removes 80% of pre-known variance
+    const val=noise+p.eff;
+    const x=(p.arm?xV:xC)+(p.r-0.5)*70;
+    const y=midY-val*sc;
+    g.x.beginPath(); g.x.arc(x,y,4,0,7);
+    g.x.fillStyle=(p.arm?C.pink:C.lilac)+'CC'; g.x.fill();
+    (p.arm?meansV:meansC).push(val);
+  });
+  const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/a.length);};
+  [[xC,meansC,C.lilac,'Control'],[xV,meansV,C.pink,'Variant']].forEach(([x,arr,col,name])=>{
+    const m=mean(arr), e=1.96*sd(arr)/Math.sqrt(arr.length)*3;
+    const y=midY-m*sc;
+    g.x.strokeStyle=col; g.x.lineWidth=3;
+    g.x.beginPath(); g.x.moveTo(x-46,y); g.x.lineTo(x+46,y); g.x.stroke();
+    g.x.lineWidth=2;
+    g.x.beginPath(); g.x.moveTo(x,y-e*sc); g.x.lineTo(x,y+e*sc); g.x.stroke();
+    [[y-e*sc],[y+e*sc]].forEach(([yy])=>{g.x.beginPath();g.x.moveTo(x-10,yy);g.x.lineTo(x+10,yy);g.x.stroke();});
+    label(g,name,x,g.h-14,col,12,'center');
+  });
+  document.getElementById('cuped-read').textContent = cupedK<0.05?'Raw data — wide confidence intervals':
+    cupedK<1?'Removing predictable noise… ('+Math.round(cupedK*100)+'%)':'CUPED applied — CIs ~40–50% tighter, lift now visible ✓';
+}
+function cupedPlay(){loop('cu',t=>{cupedK=Math.min(1,t/1.6); cupedDraw(); return cupedK<1;});}
+function cupedReset(){cupedK=0; cupedInit(); cupedDraw();}
+
+// ---------- WINSORIZATION: capped bars ----------
+let winsorVals=null, winsorK=0;
+function winsorInit(){winsorVals=[]; for(let i=0;i<22;i++){winsorVals.push(20+Math.random()*45);} winsorVals[6]=195; winsorVals[15]=165;}
+function winsorDraw(){
+  const g=ctx2d('cv-winsor'); clear(g);
+  if(!winsorVals)winsorInit();
+  const base=g.h-34, bw=(g.w-80)/winsorVals.length, cap=70;
+  label(g,'22 shoppers\' order values. The cap line clips the whales — mean stops lying.',14,22,C.txtA,12);
+  let sumRaw=0,sumW=0;
+  winsorVals.forEach((v,i)=>{
+    const vw=v>cap? cap+(v-cap)*(1-winsorK) : v;
+    sumRaw+=v; sumW+=vw;
+    const x=44+i*bw, h=vw*0.85;
+    g.x.fillStyle=v>cap? C.pink : C.lilac;
+    g.x.beginPath(); g.x.roundRect(x,base-h,bw*0.66,h,3); g.x.fill();
+  });
+  // cap line
+  const capY=base-cap*0.85;
+  g.x.setLineDash([6,5]); g.x.strokeStyle=C.violet; g.x.lineWidth=2;
+  g.x.beginPath(); g.x.moveTo(30,capY); g.x.lineTo(g.w-16,capY); g.x.stroke(); g.x.setLineDash([]);
+  label(g,'P95 cap',g.w-70,capY-8,C.violet,12);
+  // means
+  const mRaw=sumRaw/winsorVals.length, mW=sumW/winsorVals.length;
+  const myR=base-mRaw*0.85, myW=base-mW*0.85;
+  g.x.strokeStyle=C.red+'88'; g.x.beginPath(); g.x.moveTo(30,myR); g.x.lineTo(g.w-16,myR); g.x.stroke();
+  g.x.strokeStyle=C.green; g.x.lineWidth=2.5; g.x.beginPath(); g.x.moveTo(30,myW); g.x.lineTo(g.w-16,myW); g.x.stroke();
+  label(g,'raw mean',36,myR-6,C.red,11);
+  label(g,'winsorized mean',36,myW-7,C.green,11);
+  document.getElementById('winsor-read').textContent = winsorK<0.05?'Raw: 2 whales inflate the mean':
+    winsorK<1?'Clipping outliers to P95…':'Capped ✓ mean now reflects typical shoppers, variance way down';
+}
+function winsorPlay(){loop('wi',t=>{winsorK=Math.min(1,t/1.4); winsorDraw(); return winsorK<1;});}
+function winsorReset(){winsorK=0; winsorDraw();}
+
+// ---------- BONFERRONI: 12 metric cards ----------
+let bonfState=null;
+function bonfPlay(corrected){
+  // pre-roll outcomes: with alpha=.05 uncorrected, force ~2 false positives; corrected: none
+  const n=12; const cells=[];
+  for(let i=0;i<n;i++){cells.push({fp:!corrected&&(i===3||i===9), t:i*0.28});}
+  bonfState={cells,corrected};
+  loop('bo',t=>{
+    const g=ctx2d('cv-bonf'); clear(g);
+    const cols=6, cw=(g.w-60)/cols, ch=74, x0=30, y0=52;
+    label(g,corrected?'Same 12 metrics, α split 0.05 → 0.0042 each. No fake winners.':'12 metrics tested at α = 0.05 each — watch the fake “winners” pop.',14,24,C.txtA,12.5);
+    const names=['Revenue','AOV','Conv%','Quiz','Wishlist','Reviews','Retention','Bag adds','Bounce','Search','Samples','Referral'];
+    cells.forEach((c,i)=>{
+      const cx=x0+(i%cols)*cw, cy=y0+Math.floor(i/cols)*(ch+14);
+      const on=t>c.t;
+      const isFP=c.fp&&on;
+      g.x.fillStyle=isFP? (Math.floor(t*4)%2?'#4A1220':'#7A1B2B') : on?'#171F3D':'#11162B';
+      g.x.strokeStyle=isFP?C.red:on?'#2C3765':C.grid;
+      g.x.beginPath(); g.x.roundRect(cx,cy,cw-12,ch,10); g.x.fill(); g.x.stroke();
+      label(g,names[i],cx+12,cy+26,on?C.white:'#4A5480',12);
+      label(g,on?(isFP?'p=.03 “WIN!” ← false':'p='+(0.1+((i*37)%80)/100).toFixed(2)+' ns'):'…',cx+12,cy+50,isFP?C.pink:'#7B87B6',11);
+    });
+    const done=t>n*0.28+0.4;
+    if(done){
+      document.getElementById('bonf-read').textContent = corrected?
+        'α/12 = 0.0042 per metric → family-wise error protected ✓':
+        '2 metrics “won” by pure chance — ~46% odds of ≥1 false win at α=.05 × 12';
+    }
+    return !done;
+  });
+}
+
+// ---------- SEQUENTIAL: narrowing CI funnel ----------
+function seqPlay(){
+  // simulate cumulative lift path
+  const days=28, path=[]; let lift=0;
+  for(let d=1;d<=days;d++){lift=0.9+0.35*Math.sin(d*1.3)+ (Math.random()-0.5)*1.6/Math.sqrt(d); path.push(lift+1.4*(1-Math.exp(-d/6)));}
+  loop('se',t=>{
+    const g=ctx2d('cv-seq'); clear(g);
+    const cur=Math.min(days,Math.max(1,Math.floor(t*7)));
+    const x0=54,x1=g.w-24, y0=36, y1=g.h-40;
+    const X=d=>x0+(d-1)/(days-1)*(x1-x0);
+    const Y=v=>y1-((v+4)/10)*(y1-y0);
+    // zero line
+    g.x.strokeStyle=C.grid; g.x.beginPath(); g.x.moveTo(x0,Y(0)); g.x.lineTo(x1,Y(0)); g.x.stroke();
+    label(g,'0% lift',8,Y(0)+4,C.txtA,11);
+    label(g,'Adjusted CI starts wide (the “peeking tax”), narrows as data accrues.',14,22,C.txtA,12);
+    // CI band
+    g.x.beginPath();
+    for(let d=1;d<=cur;d++){const w=5.4/Math.sqrt(d); const v=path[d-1]+w; d===1?g.x.moveTo(X(d),Y(v)):g.x.lineTo(X(d),Y(v));}
+    for(let d=cur;d>=1;d--){const w=5.4/Math.sqrt(d); g.x.lineTo(X(d),Y(path[d-1]-w));}
+    g.x.closePath(); g.x.fillStyle=C.lilac+'33'; g.x.fill();
+    // lift line
+    g.x.beginPath();
+    for(let d=1;d<=cur;d++){d===1?g.x.moveTo(X(d),Y(path[d-1])):g.x.lineTo(X(d),Y(path[d-1]));}
+    g.x.strokeStyle=C.pink; g.x.lineWidth=2.5; g.x.stroke();
+    // check significance: lower bound > 0
+    let sigDay=null;
+    for(let d=1;d<=cur;d++){if(path[d-1]-5.4/Math.sqrt(d)>0){sigDay=d;break;}}
+    for(let d=1;d<=cur;d+=3){label(g,'👀',X(d)-7,y1+24,C.txtA,13);} // peeks
+    if(sigDay){
+      g.x.strokeStyle=C.green; g.x.setLineDash([5,4]);
+      g.x.beginPath(); g.x.moveTo(X(sigDay),y0); g.x.lineTo(X(sigDay),y1); g.x.stroke(); g.x.setLineDash([]);
+      label(g,'CI clears zero → call it ✓ (day '+sigDay+')',X(sigDay)+8,y0+14,C.green,12);
+    }
+    document.getElementById('seq-read').textContent='Day '+cur+' of 28 — peeked '+Math.ceil(cur/3)+' times, false-positive rate still controlled'+(sigDay?' · stat sig on day '+sigDay+' ✓':'');
+    return cur<days;
+  });
+}
+
+// ---------- SPRT: random walk to boundaries ----------
+function sprtPlay(strong){
+  const steps=90; const path=[0];
+  for(let i=1;i<steps;i++){path.push(path[i-1]+(strong?0.09:0.004)+(Math.random()-0.5)*0.34);}
+  loop('sp',t=>{
+    const g=ctx2d('cv-sprt'); clear(g);
+    const cur=Math.min(steps-1,Math.floor(t*38));
+    const x0=40,x1=g.w-20,y0=34,y1=g.h-34, up=3.2, dn=-3.2;
+    const X=i=>x0+i/(steps-1)*(x1-x0), Y=v=>y1-((v-dn)/(up-dn))*(y1-y0);
+    // boundaries
+    g.x.strokeStyle=C.green; g.x.setLineDash([6,4]);
+    g.x.beginPath(); g.x.moveTo(x0,Y(up*0.78)); g.x.lineTo(x1,Y(up*0.78)); g.x.stroke();
+    g.x.strokeStyle=C.red;
+    g.x.beginPath(); g.x.moveTo(x0,Y(dn*0.78)); g.x.lineTo(x1,Y(dn*0.78)); g.x.stroke(); g.x.setLineDash([]);
+    label(g,'✓ SHIP — evidence for effect',x0+6,Y(up*0.78)-8,C.green,12);
+    label(g,'✗ STOP — evidence for no effect',x0+6,Y(dn*0.78)+18,C.red,12);
+    label(g,'Running evidence score. Hit a boundary = decision, instantly.',14,20,C.txtA,12);
+    // walk
+    let hit=null;
+    g.x.beginPath();
+    for(let i=0;i<=cur;i++){
+      const v=path[i]; i===0?g.x.moveTo(X(i),Y(v)):g.x.lineTo(X(i),Y(v));
+      if(hit===null&&v>up*0.78)hit=['ship',i]; if(hit===null&&v<dn*0.78)hit=['stop',i];
+      if(hit)break;
+    }
+    g.x.strokeStyle=C.blue; g.x.lineWidth=2.5; g.x.stroke();
+    const endI=hit?hit[1]:cur;
+    g.x.beginPath(); g.x.arc(X(endI),Y(path[endI]),6,0,7); g.x.fillStyle=hit? (hit[0]==='ship'?C.green:C.red):C.white; g.x.fill();
+    document.getElementById('sprt-read').textContent = hit?
+      (hit[0]==='ship'?'Boundary hit on "day" '+Math.round(endI/3)+' → winner declared early ✓':'Boundary hit → no effect, test stopped, traffic freed'):
+      'Evidence accumulating… ('+Math.round(cur/3)+' days)';
+    return !hit && cur<steps-1;
+  });
+}
+
+// ---------- BAYESIAN: prior -> posterior ----------
+function bayesPlay(){
+  loop('ba',t=>{
+    const g=ctx2d('cv-bayes'); clear(g);
+    const k=Math.min(1,t/2.4); // data volume 0..1
+    const base=g.h-38;
+    const muPr=g.w*0.45, sigPr=110;
+    const muPo=g.w*0.45+ k*85, sigPo=110-95*k;
+    label(g,'Grey = prior belief. Purple = posterior after data. It shifts AND sharpens.',14,22,C.txtA,12);
+    // prior
+    g.x.beginPath();
+    for(let px=0;px<=g.w;px+=3){const y=base-110*gauss(px,muPr,sigPr); px===0?g.x.moveTo(px,y):g.x.lineTo(px,y);}
+    g.x.strokeStyle='#57608C'; g.x.lineWidth=2; g.x.setLineDash([5,4]); g.x.stroke(); g.x.setLineDash([]);
+    // posterior
+    const ampl=110+50*k;
+    g.x.beginPath();
+    for(let px=0;px<=g.w;px+=3){const y=base-ampl*gauss(px,muPo,sigPo); px===0?g.x.moveTo(px,y):g.x.lineTo(px,y);}
+    g.x.strokeStyle=C.violet; g.x.lineWidth=3; g.x.stroke();
+    g.x.lineTo(g.w,base); g.x.lineTo(0,base); g.x.closePath(); g.x.fillStyle=C.violet+'26'; g.x.fill();
+    // zero line
+    const zx=g.w*0.42;
+    g.x.strokeStyle=C.grid; g.x.beginPath(); g.x.moveTo(zx,base); g.x.lineTo(zx,40); g.x.stroke();
+    label(g,'0% lift',zx,base+18,C.txtA,11,'center');
+    // P(beat control) = mass right of zero (approx)
+    const p=Math.min(0.99,0.5+0.49*k*1.1);
+    g.x.fillStyle=C.green+'22'; g.x.strokeStyle=C.green;
+    g.x.beginPath(); g.x.roundRect(g.w-265,16,250,30,15); g.x.fill(); g.x.stroke();
+    label(g,'P(variant beats control) = '+(p*100).toFixed(0)+'%',g.w-140,36,C.green,13,'center');
+    document.getElementById('bayes-read').textContent = k<1?'Feeding in shopper data… belief updating':'Posterior locked: narrow, confident, exec-readable ✓';
+    return k<1;
+  });
+}
+
+// ---------- SRM: bucket fill ----------
+function srmPlay(broken){
+  loop('sr',t=>{
+    const g=ctx2d('cv-srm'); clear(g);
+    const k=Math.min(1,t/2);
+    const total=100000*k;
+    const fA=broken?0.55:0.501, fB=1-fA;
+    const bw=140,bh=140, y=g.h-60, xA=g.w*0.32-bw/2, xB=g.w*0.68-bw/2;
+    label(g,'Planned 50/50 split of 100k users. Chi-squared test judges the actual split.',14,22,C.txtA,12);
+    [[xA,fA,C.lilac,'Control'],[xB,fB,C.pink,'Treatment']].forEach(([x,f,col,name])=>{
+      g.x.strokeStyle='#39426E'; g.x.lineWidth=2;
+      g.x.beginPath(); g.x.roundRect(x,y-bh,bw,bh,8); g.x.stroke();
+      const fill=bh*f*2*k*0.92;
+      g.x.fillStyle=col+'BB';
+      g.x.beginPath(); g.x.roundRect(x+3,y-3-Math.min(bh-6,fill),bw-6,Math.min(bh-6,fill),5); g.x.fill();
+      label(g,name,x+bw/2,y+20,col,12,'center');
+      label(g,Math.round(total*f).toLocaleString(),x+bw/2,y-bh-10,C.white,13,'center');
+    });
+    if(k>=1){
+      const bad=broken;
+      const col=bad?C.red:C.green;
+      g.x.fillStyle=col+'22'; g.x.strokeStyle=col;
+      g.x.beginPath(); g.x.roundRect(g.w/2-150,44,300,34,17); g.x.fill(); g.x.stroke();
+      label(g,bad?'🚨 SRM DETECTED — p < 0.001, fix the plumbing':'✓ Split healthy — chi-squared p = 0.53',g.w/2,66,col,13,'center');
+      document.getElementById('srm-read').textContent = bad?
+        '55/45 on 100k users ≈ impossible by chance. Results are contaminated — do not interpret lifts.':
+        '50.1/49.9 — perfectly normal wobble. Safe to read results.';
+    } else {document.getElementById('srm-read').textContent='Bucketing users… '+Math.round(total).toLocaleString();}
+    return k<1;
+  });
+}
+
+// ---------- boot: draw statics + autoplay on scroll ----------
+const autos={ 'cv-ttest':ttestPlay,'cv-cuped':cupedPlay,'cv-winsor':winsorPlay,'cv-bonf':()=>bonfPlay(false),'cv-seq':seqPlay,'cv-sprt':()=>sprtPlay(true),'cv-bayes':bayesPlay,'cv-srm':()=>srmPlay(false)};
+const seen=new Set();
+function safe(fn){try{fn();}catch(e){console.error(e);}}
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&!seen.has(e.target.id)){seen.add(e.target.id); safe(autos[e.target.id]);}})},{threshold:0.35});
+  Object.keys(autos).forEach(id=>io.observe(document.getElementById(id)));
+}else{Object.values(autos).forEach(safe);}
+// draw static first frames so nothing looks blank before scroll
+safe(ttestDraw); safe(cupedDraw); safe(winsorDraw);
+let rT=null; window.addEventListener('resize',()=>{clearTimeout(rT); rT=setTimeout(()=>{safe(ttestDraw);safe(cupedDraw);safe(winsorDraw);},150);});
+</script>
+</body>
+</html>
