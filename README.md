@@ -13,6 +13,7 @@ Interactive, animated learning site for the **Learn Statsig** track — built fo
 | `analytics-session-replay.html` | Analytics + Session Replay — Metrics Explorer, funnel split, replay triggers |
 | `stats-models.html` | Statsig vs Amplitude — statistical models, animated (sequential testing, Bayesian/frequentist, CUPED) |
 | `amplitude-mechanics.html` | Amplitude Experiment mechanics — bucketing to p-values, animated (reference) |
+| `apj-data-residency.html` | Statsig in APJ: data residency mitigations, animated (internal reference) |
 | `concept-map.html` | Statsig ↔ Amplitude concept map (reference) |
 
 Each course includes interactive simulators for statistical concepts, ELI6 explanations, Amplitude equivalents, and per-unit + cumulative quizzes. Quiz progress is stored in browser localStorage.
@@ -47,3 +48,4 @@ Each course includes interactive simulators for statistical concepts, ELI6 expla
 | v1.18 | 2026-07-04 | amplitude-mechanics: characters renamed Ana→Baljin, Priya→Madushri |
 | v1.19 | 2026-07-04 | Standardised footer on all 8 pages (credit line + "Mobile friendly, best viewed on desktop" + last updated); removed duplicate index credit block |
 | v1.20 | 2026-07-05 | README: removed hardcoded personal live-site URL (repo now deploys to two mirrors; keep content account-neutral) |
+| v1.21 | 2026-07-05 | Added animated APJ Data Residency page (internal; excluded from public mirror), navbar rebuilt across 9 pages, date stamps refreshed |
